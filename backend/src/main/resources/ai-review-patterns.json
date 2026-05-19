@@ -1,0 +1,26 @@
+[
+  {
+    "name": "illegal_trade",
+    "category": "illegal",
+    "severity": "high",
+    "regex": "(代写|枪手).{0,8}(论文|作业)"
+  },
+  {
+    "name": "fake_document",
+    "category": "illegal",
+    "severity": "high",
+    "regex": "(办|买).{0,6}(假证|假章|假学生证)"
+  },
+  {
+    "name": "threat_expression",
+    "category": "abuse",
+    "severity": "high",
+    "regex": "(弄死你|打死你|砍死你)"
+  },
+  {
+    "name": "targeted_discrimination",
+    "category": "discrimination",
+    "severity": "high",
+    "regex": "(某些人|这群人).{0,6}(都该|天生)"
+  }
+]

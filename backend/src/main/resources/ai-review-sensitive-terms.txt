@@ -1,0 +1,14 @@
+# format: category|severity|term
+abuse|medium|傻逼
+abuse|medium|废物
+abuse|medium|滚开
+abuse|high|去死
+abuse|high|弄死你
+discrimination|high|低等人
+discrimination|high|种族歧视
+discrimination|medium|外地狗
+illegal|high|代写论文
+illegal|high|办假证
+illegal|high|出售账号
+illegal|medium|刷单
+illegal|medium|开挂

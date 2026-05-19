@@ -68,6 +68,22 @@
       </view>
 
       <view v-if="aiSuggestion" class="ai-result">
+        <view
+          v-if="aiReview"
+          class="ai-review-banner"
+          :class="`risk-${aiReview.riskLevel || 'low'}`"
+        >
+          <text class="ai-review-title">AI审查：{{ reviewLabel }}</text>
+          <text class="ai-review-msg">{{ aiReview.suggestion || '内容已完成审查，可继续编辑。' }}</text>
+          <text v-if="reviewCategoriesText" class="ai-review-meta">风险类别：{{ reviewCategoriesText }}</text>
+          <text v-if="reviewHitsText" class="ai-review-meta">命中规则：{{ reviewHitsText }}</text>
+          <button
+            v-if="(aiReview.riskLevel === 'medium' || aiReview.riskLevel === 'high') && aiReview.suggestion"
+            class="small-btn"
+            @click="applyReviewSuggestion"
+          >按建议替换</button>
+        </view>
+
         <view class="ai-result-item">
           <text class="ai-label">标题建议</text>
           <text class="ai-value">{{ aiSuggestion.title }}</text>
@@ -97,6 +113,7 @@
               @click="toggleTag(tag)"
             >{{ tag }}</text>
           </view>
+          <button class="small-btn" @click="handleAiAssist">重新生成</button>
         </view>
       </view>
     </view>
@@ -213,6 +230,7 @@ export default {
       content: '',
       aiLoading: false,
       aiSuggestion: null,
+      aiReview: null,
       selectedTags: [],
       imageList: [],
       price: '',
@@ -243,6 +261,20 @@ export default {
         if (validOptions.length < 2) return false;
       }
       return hasContent && !this.publishing;
+    },
+    reviewLabel() {
+      if (!this.aiReview?.riskLevel) return '低风险';
+      if (this.aiReview.riskLevel === 'high') return '高风险';
+      if (this.aiReview.riskLevel === 'medium') return '中风险';
+      return '低风险';
+    },
+    reviewCategoriesText() {
+      if (!Array.isArray(this.aiReview?.categories) || this.aiReview.categories.length === 0) return '';
+      return this.aiReview.categories.join('、');
+    },
+    reviewHitsText() {
+      if (!Array.isArray(this.aiReview?.hits) || this.aiReview.hits.length === 0) return '';
+      return this.aiReview.hits.slice(0, 3).map(hit => hit.matchedText).join('、');
     }
   },
   methods: {
@@ -273,8 +305,15 @@ export default {
         const res = await assistPost({ content: draft, categoryId: this.selectedTopic });
         if (res.code === 200) {
           this.aiSuggestion = res.data;
+          this.aiReview = res.data?.review || null;
           this.selectedTags = [];
-          uni.showToast({ title: 'AI 建议已生成', icon: 'none' });
+          if (this.aiReview?.riskLevel === 'high') {
+            uni.showToast({ title: '已生成（检测到高风险提示）', icon: 'none' });
+          } else if (this.aiReview?.riskLevel === 'medium') {
+            uni.showToast({ title: '已生成（含风险提示）', icon: 'none' });
+          } else {
+            uni.showToast({ title: 'AI 建议已生成', icon: 'none' });
+          }
         } else {
           uni.showToast({ title: res.message || 'AI 生成失败', icon: 'none' });
         }
@@ -286,6 +325,11 @@ export default {
     },
     useAiTitle() { if (this.aiSuggestion?.title) this.title = this.aiSuggestion.title; },
     useAiContent() { if (this.aiSuggestion?.polishedContent) this.content = this.aiSuggestion.polishedContent; },
+    applyReviewSuggestion() {
+      if (!this.aiReview?.suggestion) return;
+      this.content = `${this.content}\n\n[AI审查建议]\n${this.aiReview.suggestion}`;
+      uni.showToast({ title: '已附加审查建议', icon: 'none' });
+    },
     useAiCategory() {
       if (!this.aiSuggestion?.recommendedCategoryId) return;
       const matched = this.topicList.find(item => item.id === this.aiSuggestion.recommendedCategoryId);
@@ -375,6 +419,12 @@ export default {
 .ai-btn[disabled] { background:rgba(17,17,17,.18); box-shadow:none; }
 .ai-result { margin-top:22rpx; }
 .ai-result-item { padding:20rpx 0; border-top:1rpx solid rgba(17,17,17,.08); }
+.ai-review-banner { padding:18rpx; border-radius:16rpx; margin-bottom:14rpx; border:1rpx solid rgba(17,17,17,.08); background:rgba(17,17,17,.03); }
+.ai-review-banner.risk-medium { background:rgba(245, 158, 11, .10); border-color:rgba(245, 158, 11, .55); }
+.ai-review-banner.risk-high { background:rgba(239, 68, 68, .12); border-color:rgba(239, 68, 68, .55); }
+.ai-review-title { display:block; font-size:25rpx; font-weight:bold; color:#222; }
+.ai-review-msg { display:block; margin-top:8rpx; font-size:24rpx; color:#333; line-height:1.5; }
+.ai-review-meta { display:block; margin-top:6rpx; font-size:22rpx; color:#595959; }
 .ai-label { display:block; margin-bottom:10rpx; font-size:24rpx; color:#575753; font-weight:bold; }
 .ai-value { display:block; margin-bottom:14rpx; font-size:26rpx; color:#252523; line-height:1.6; word-break:break-all; }
 .image-item { position:relative; width:200rpx; height:200rpx; }

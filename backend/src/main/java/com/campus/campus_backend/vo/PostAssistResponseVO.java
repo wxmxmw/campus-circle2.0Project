@@ -15,4 +15,5 @@ public class PostAssistResponseVO {
     private Long recommendedCategoryId;
     private String recommendedCategoryName;
     private List<String> tags;
+    private AiReviewResultVO review;
 }

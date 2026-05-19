@@ -5,6 +5,7 @@ import com.campus.campus_backend.common.ErrorCode;
 import com.campus.campus_backend.domain.Category;
 import com.campus.campus_backend.dto.PostAssistRequest;
 import com.campus.campus_backend.repository.CategoryRepository;
+import com.campus.campus_backend.vo.AiReviewResultVO;
 import com.campus.campus_backend.vo.PostAssistResponseVO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,8 +33,11 @@ import java.util.Set;
 
 @Service
 public class GeminiPostAssistService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GeminiPostAssistService.class);
+
     private final CategoryRepository categoryRepository;
     private final ObjectMapper objectMapper;
+    private final AiContentReviewService aiContentReviewService;
 
     @Value("${ai.gemini.api-key:}")
     private String apiKey;
@@ -56,9 +60,11 @@ public class GeminiPostAssistService {
     @Value("${ai.gemini.proxy-port:0}")
     private int proxyPort;
 
-    public GeminiPostAssistService(CategoryRepository categoryRepository, ObjectMapper objectMapper) {
+    public GeminiPostAssistService(CategoryRepository categoryRepository, ObjectMapper objectMapper,
+                                   AiContentReviewService aiContentReviewService) {
         this.categoryRepository = categoryRepository;
         this.objectMapper = objectMapper;
+        this.aiContentReviewService = aiContentReviewService;
     }
 
     public PostAssistResponseVO assist(PostAssistRequest request) {
@@ -89,7 +95,19 @@ public class GeminiPostAssistService {
             throw new BizException(ErrorCode.SERVER_ERROR.getCode(), "Gemini returned fewer than 3 tags");
         }
 
-        return new PostAssistResponseVO(title, polishedContent, recommended.getId(), recommended.getName(), tags);
+        AiReviewResultVO review;
+        try {
+            review = aiContentReviewService.review(title, polishedContent, tags);
+        } catch (Exception ex) {
+            log.warn("ai review degraded: {}", ex.getMessage());
+            review = new AiReviewResultVO("low", List.of("normal"), List.of(),
+                    "Review temporarily unavailable. You can continue editing manually.", true);
+        }
+
+        log.info("ai-post-review riskLevel={}, categories={}, hitCount={}",
+                review.getRiskLevel(), review.getCategories(), review.getHits() == null ? 0 : review.getHits().size());
+
+        return new PostAssistResponseVO(title, polishedContent, recommended.getId(), recommended.getName(), tags, review);
     }
 
     private String buildPrompt(PostAssistRequest request, List<Category> categories) {
