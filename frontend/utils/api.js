@@ -22,7 +22,7 @@ export const toAbsoluteUrl = (url, fallback = '/static/logo.png') => {
   if (!url) {
     return fallback
   }
-  if (/^https?:\/\//i.test(url)) {
+  if (/^(https?:|data:|blob:|file:|wxfile:|_doc\/|\/?static\/|(\.\.\/)+static\/|\.\/static\/)/i.test(url)) {
     return url
   }
   return `${getBackendOrigin()}${url.startsWith('/') ? url : `/${url}`}`

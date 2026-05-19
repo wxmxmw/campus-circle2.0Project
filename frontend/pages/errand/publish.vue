@@ -58,12 +58,12 @@
         <text class="label">支付方式</text>
         <radio-group @change="handleCurrencyChange" class="radio-group">
           <label class="radio-label">
-            <radio value="1" color="#52C41A" :checked="form.currency === 1" />
+            <radio value="1" color="#3f3f3f" :checked="form.currency === 1" />
             <text>积分支付</text>
             <text class="balance">(余额: {{ userStore.userInfo?.points || 0 }})</text>
           </label>
           <label class="radio-label">
-            <radio value="2" color="#1890FF" :checked="form.currency === 2" />
+            <radio value="2" color="#5a5a5a" :checked="form.currency === 2" />
             <text>现金支付 (¥)</text>
           </label>
         </radio-group>
@@ -168,7 +168,7 @@ const handleSubmit = async () => {
 .input { font-size: 30rpx; height: 60rpx; }
 .textarea { width: 100%; height: 160rpx; font-size: 30rpx; }
 .price { color: #ff4d4f; font-weight: bold; font-size: 36rpx; }
-.submit-btn { margin-top: 60rpx; background: #52C41A; color: #fff; border-radius: 40rpx; }
+.submit-btn { margin-top: 60rpx; background: #3f3f3f; color: #fff; border-radius: 40rpx; }
 
 .picker-val { color: #666; font-size: 30rpx; }
 .radio-group { display: flex; gap: 40rpx; }

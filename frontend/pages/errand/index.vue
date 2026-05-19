@@ -1,7 +1,7 @@
 <template>
  <view class="page-container">
      <!-- 自定义头部 (绿色) -->
-     <view class="custom-header green-theme">
+     <view class="custom-header neutral-theme">
        <!-- 状态栏占位 (手机时间信号栏) -->
        <view class="status-bar"></view>
        <!-- 标题栏 -->
@@ -65,7 +65,17 @@ import { errandApi } from '@/api/errand'
 
 const list = ref([])
 
+const syncPageTitle = (title) => {
+  uni.setNavigationBarTitle({
+    title
+  })
+  if (typeof document !== 'undefined') {
+    document.title = title
+  }
+}
+
 onShow(() => {
+  syncPageTitle('Errand')
   uni.hideTabBar()
   loadData()
 })
@@ -100,7 +110,7 @@ const loadMore = () => {
 </script>
 
 <style scoped>
-.page-container { height: 100vh; display: flex; flex-direction: column; background: #F5F5F5; }
+.page-container { height: 100vh; display: flex; flex-direction: column; background: #ececec; }
 .nav-header { 
   background: #fff; 
   padding: 80rpx 30rpx 20rpx; 
@@ -118,10 +128,10 @@ const loadMore = () => {
   padding-bottom: 20rpx;
 }
 
-.green-theme {
+.neutral-theme {
   /* 你的绿色渐变 */
-  background: linear-gradient(135deg, #e8f5e9 0%, #a5d6a7 100%);
-  box-shadow: 0 4rpx 10rpx rgba(76, 175, 80, 0.1);
+  background: linear-gradient(135deg, #f2f2f2 0%, #dedede 100%);
+  box-shadow: 0 8rpx 22rpx rgba(17, 17, 17, 0.08);
 }
 
 .status-bar {
@@ -141,7 +151,7 @@ const loadMore = () => {
 .page-title {
   font-size: 34rpx;
   font-weight: bold;
-  color: #1b5e20; /* 深绿色文字 */
+  color: #1f1f1f;
 }
 
 /* 内容区域下移，给头部留出空间 */
@@ -153,11 +163,18 @@ const loadMore = () => {
   margin-top: calc(var(--status-bar-height) + 108rpx); /* 状态栏+导航栏高度+余量 */
 }
 .title { font-size: 40rpx; font-weight: 800; }
-.plus-btn { background: #E6F7FF; color: #1890FF; padding: 10rpx 24rpx; border-radius: 30rpx; font-size: 26rpx; font-weight: bold; }
+.plus-btn { background: #efefef; color: #4f4f4f; padding: 10rpx 24rpx; border-radius: 30rpx; font-size: 26rpx; font-weight: bold; }
 
 .content { flex: 1; padding: 20rpx; box-sizing: border-box; padding-bottom: 160rpx; }
 
-.errand-card { background: #fff; padding: 30rpx; border-radius: 16rpx; margin-bottom: 24rpx; }
+.errand-card {
+  background: #fff;
+  padding: 30rpx;
+  border-radius: 22rpx;
+  margin-bottom: 24rpx;
+  border: 1rpx solid rgba(17,17,17,0.05);
+  box-shadow: 0 10rpx 30rpx rgba(17,17,17,0.06);
+}
 .card-header { display: flex; justify-content: space-between; margin-bottom: 20rpx; }
 .user-info { display: flex; align-items: center; }
 .avatar { width: 50rpx; height: 50rpx; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16rpx; }
@@ -167,15 +184,15 @@ const loadMore = () => {
 .desc { font-size: 30rpx; font-weight: bold; margin-bottom: 20rpx; display: block; }
 .route { display: flex; align-items: center; font-size: 26rpx; color: #666; margin-bottom: 12rpx; }
 .tag { font-size: 20rpx; padding: 2rpx 8rpx; border-radius: 4rpx; margin-right: 12rpx; color: #fff; }
-.tag.pick { background: #1890FF; }
-.tag.send { background: #52C41A; }
+.tag.pick { background: #7a7a7a; }
+.tag.send { background: #3f3f3f; }
 
 .card-footer { display: flex; justify-content: space-between; margin-top: 20rpx; padding-top: 20rpx; border-top: 1rpx solid #f9f9f9; }
 .time { font-size: 24rpx; color: #ccc; }
 .status-tag { font-size: 24rpx; font-weight: bold; }
 .s-0 { color: #faad14; } /* 待接单 */
-.s-1 { color: #1890FF; } /* 进行中 */
-.s-2 { color: #52C41A; } /* 已完成 */
+.s-1 { color: #5a5a5a; } /* 进行中 */
+.s-2 { color: #3f3f3f; }
 /* 新增货币样式 */
 .bounty-wrapper { display: flex; align-items: center; }
 .coin-icon { font-size: 30rpx; margin-right: 4rpx; }

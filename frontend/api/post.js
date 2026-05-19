@@ -1,6 +1,13 @@
 // api/post.js
 import request from '@/utils/request';
 
+const PENDING_POST_IMAGE_URLS_KEY = 'pendingPostImageUrls'
+
+const getPendingPostImages = () => {
+  const urls = uni.getStorageSync(PENDING_POST_IMAGE_URLS_KEY)
+  return Array.isArray(urls) ? urls.filter(Boolean) : []
+}
+
 /**
  * 获取帖子详情
  * @param {Number} postId 
@@ -79,17 +86,25 @@ export const reportComment = async (commentId, reason) => {
 
 // 发布帖子
 export const publishPost = async (data) => {
+  const images = Array.isArray(data.images) && data.images.length > 0
+    ? data.images
+    : getPendingPostImages()
   const payload = {
     categoryId: data.categoryId || null,
     isAnonymous: data.isAnonymous || false,
+    title: data.title || '',
+    tags: Array.isArray(data.tags) ? data.tags : [],
     content: data.content,
-    images: data.images || [],
+    images,
     product: data.product || null,
     vote: data.vote || null,
     topicId: data.topicId || null,
     topicName: data.topicName || null
   };
   const res = await request.post('/posts', payload);
+  if (res.code === 200) {
+    uni.removeStorageSync(PENDING_POST_IMAGE_URLS_KEY)
+  }
   return res;
 };
 

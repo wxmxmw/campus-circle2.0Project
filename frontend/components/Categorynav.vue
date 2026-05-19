@@ -1,9 +1,6 @@
 <template>
   <view>
-    <!-- 占位元素 -->
     <view class="category-nav-placeholder" v-if="isFixed"></view>
-    
-    <!-- 分类导航 - 吸顶 + 磨砂效果 -->
     <view class="category-nav-wrapper" :class="{ 'is-fixed': isFixed }">
       <scroll-view class="category-nav" scroll-x show-scrollbar="false">
         <view 
@@ -46,18 +43,15 @@ export default {
 </script>
 
 <style scoped>
-/* 分类导航占位元素 */
 .category-nav-placeholder {
-  height: 288rpx;
+  height: 268rpx;
 }
 
-/* 分类导航 - 吸顶 + 磨砂效果 */
 .category-nav-wrapper {
   background-color: transparent;
-  border-bottom: 1rpx solid #f0f0f0;
+  border-bottom: 1rpx solid rgba(17, 17, 17, 0.06);
   transition: all 0.3s ease;
   z-index: 99;
- 
 }
 
 .category-nav-wrapper.is-fixed {
@@ -65,30 +59,42 @@ export default {
   top: 120rpx;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(20rpx);
-  -webkit-backdrop-filter: blur(20rpx);
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.08);
+  background: rgba(243, 243, 241, 0.8);
+  backdrop-filter: blur(24rpx);
+  -webkit-backdrop-filter: blur(24rpx);
+  box-shadow: 0 12rpx 30rpx rgba(17, 17, 17, 0.05);
 }
 
 .category-nav {
-  padding: 20rpx 30rpx;
+  padding: 18rpx 30rpx 24rpx;
   white-space: nowrap;
 }
 
 .category-item {
   display: inline-block;
-  padding: 10rpx 25rpx;
-  margin-right: 20rpx;
+  padding: 12rpx 24rpx;
+  margin-right: 16rpx;
   font-size: 28rpx;
-  color: #666;
-  border-radius: 30rpx;
+  color: #6d6d68;
+  border-radius: 999rpx;
+  border: 1rpx solid rgba(17, 17, 17, 0.08);
+  background: rgba(255, 255, 255, 0.55);
   transition: all 0.3s;
 }
 
 .category-item.active {
-  background-color: #e8f5e9;
-  color: #4caf50;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.12) 0,
+      rgba(255, 255, 255, 0.12) 2rpx,
+      transparent 2rpx,
+      transparent 20rpx
+    ),
+    #171717;
+  color: #ffffff;
   font-weight: bold;
+  border-color: #171717;
+  box-shadow: 0 10rpx 22rpx rgba(17, 17, 17, 0.14);
 }
 </style>

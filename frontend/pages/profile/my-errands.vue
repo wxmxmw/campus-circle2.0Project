@@ -125,7 +125,7 @@ const formatDate = (ts) => {
   left: 0;
   width: 100%;
   z-index: 999;
-  background-color: #fff; /* 或者用 #00B96B 跑腿绿 */
+  background-color: #fff;
   padding-top: var(--status-bar-height); /* 避开手机状态栏/刘海 */
   height: 88rpx; /* 标准导航栏内容高度 */
   display: flex;
@@ -183,7 +183,7 @@ const formatDate = (ts) => {
 }
 
 .tab-item.active {
-  color: #00B96B; /* 跑腿绿 */
+  color: #333333;
   font-weight: bold;
 }
 
@@ -193,7 +193,7 @@ const formatDate = (ts) => {
   bottom: 0;
   width: 40rpx;
   height: 4rpx;
-  background: #00B96B;
+  background: #4a4a4a;
   border-radius: 2rpx;
 }
 
@@ -208,9 +208,10 @@ const formatDate = (ts) => {
 .errand-item {
   background: #fff;
   padding: 30rpx;
-  border-radius: 16rpx;
+  border-radius: 22rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.02);
+  border: 1rpx solid rgba(17, 17, 17, 0.05);
+  box-shadow: 0 10rpx 26rpx rgba(17,17,17,0.06);
 }
 
 .item-header {
@@ -222,17 +223,17 @@ const formatDate = (ts) => {
 
 .time { color: #999; }
 .status { font-weight: bold; }
-.s-0 { color: #FF9800; } /* 待接单 */
-.s-1 { color: #1890FF; } /* 进行中 */
-.s-2 { color: #52C41A; } /* 已完成 */
+.s-0 { color: #666666; } /* 待接单 */
+.s-1 { color: #5a5a5a; } /* 进行中 */
+.s-2 { color: #3f3f3f; }
 .s-3 { color: #999; }    /* 已取消 */
 
 .item-body { margin-bottom: 20rpx; }
 .content { font-size: 30rpx; font-weight: bold; color: #333; margin-bottom: 16rpx; }
 .route-line { font-size: 26rpx; color: #666; display: flex; align-items: center; }
 .dot { padding: 2rpx 8rpx; border-radius: 4rpx; font-size: 20rpx; color: #fff; margin-right: 10rpx; }
-.pick { background: #1890FF; }
-.send { background: #FA8C16; margin-left: 10rpx; }
+.pick { background: #7a7a7a; }
+.send { background: #4a4a4a; margin-left: 10rpx; }
 .arrow { margin: 0 10rpx; color: #ccc; }
 
 .item-footer {

@@ -1,15 +1,10 @@
 <template>
   <view class="post-card">
-    <view v-if="post.isTop" class="top-badge">置顶</view>
+    <view v-if="post.isTop" class="top-badge">PINNED</view>
 
     <view class="post-header">
       <view class="user-info" @click="handleUserClick">
-        <image
-          class="user-avatar"
-          :src="getFullImageUrl(post.userAvatar)"
-          mode="aspectFill"
-        ></image>
-
+        <image class="user-avatar" :src="getFullImageUrl(post.userAvatar)" mode="aspectFill"></image>
         <view class="user-detail">
           <view class="user-name-row">
             <text class="user-name">{{ post.userName }}</text>
@@ -24,7 +19,11 @@
       <view class="post-tag" v-if="post.tag">
         <text>{{ post.tag }}</text>
       </view>
+      <text v-if="post.title" class="post-title">{{ post.title }}</text>
       <text class="post-text">{{ post.content }}</text>
+      <view v-if="post.tags && post.tags.length" class="post-tags">
+        <text v-for="tag in post.tags" :key="tag" class="content-tag">#{{ tag }}</text>
+      </view>
     </view>
 
     <view class="post-images" v-if="post.images && post.images.length > 0">
@@ -35,31 +34,29 @@
         :src="getFullImageUrl(img)"
         mode="aspectFill"
         @click.stop="handleImageClick(index)"
-      >
-      </image>
+      ></image>
     </view>
 
     <view class="product-info" v-if="post.product" @click="handleProductClick">
-      <text class="product-tag">在售</text>
-      <text class="product-price">价格 ¥{{ post.product.price }}</text>
+      <text class="product-tag">ON SALE</text>
+      <text class="product-price">PRICE ${{ post.product.price }}</text>
     </view>
 
     <view class="post-footer">
       <view class="footer-item">
-        <text class="icon">👁</text>
+        <text class="icon">V</text>
         <text>{{ formatNumber(post.views) }}</text>
       </view>
       <view class="footer-item" @click="handleTopClick">
-        <text class="icon">📌</text>
-        <text>{{ post.isTop ? '取消置顶' : '置顶' }}</text>
+        <text class="icon">P</text>
+        <text>{{ post.isTop ? 'Unpin' : 'Pin' }}</text>
       </view>
-
       <view class="footer-item" @click="handleLikeClick">
-        <text class="icon">{{ isLiked ? '❤️' : '🤍' }}</text>
+        <text class="icon">{{ isLiked ? '♥' : '♡' }}</text>
         <text>{{ formatNumber(post.likes) }}</text>
       </view>
       <view class="footer-item" @click="handleCommentClick">
-        <text class="icon">💬</text>
+        <text class="icon">C</text>
         <text>{{ formatNumber(post.comments) }}</text>
       </view>
     </view>
@@ -87,16 +84,12 @@ export default {
     getFullImageUrl(url) {
       return toAbsoluteUrl(url)
     },
-
     formatNumber(num) {
       if (!num) return '0'
       const n = parseInt(num)
-      if (n >= 10000) {
-        return (n / 10000).toFixed(1) + '万'
-      }
-      return num
+      if (n >= 10000) return (n / 10000).toFixed(1) + 'w'
+      return String(num)
     },
-
     handleUserClick() { this.$emit('user-click', this.post) },
     handleMoreClick() { this.$emit('more-click', this.post) },
     handlePostClick() { this.$emit('post-click', this.post) },
@@ -105,8 +98,7 @@ export default {
     handleTopClick() { this.$emit('top-click', this.post) },
     handleCommentClick() { this.$emit('comment-click', this.post) },
     handleLikeClick() {
-      const newStatus = !this.isLiked
-      this.$emit('like-click', { post: this.post, isLiked: newStatus })
+      this.$emit('like-click', { post: this.post, isLiked: !this.isLiked })
     }
   }
 }
@@ -115,154 +107,46 @@ export default {
 <style scoped>
 .top-badge {
   position: absolute;
-  top: 10rpx;
-  right: 10rpx;
-  background-color: #ff9800;
+  top: 18rpx;
+  right: 18rpx;
+  background: repeating-linear-gradient(135deg, rgba(255,255,255,.16) 0, rgba(255,255,255,.16) 2rpx, transparent 2rpx, transparent 16rpx), #181818;
   color: #fff;
-  padding: 6rpx 16rpx;
+  padding: 8rpx 18rpx;
   font-size: 22rpx;
-  border-radius: 8rpx;
-  box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.15);
+  border-radius: 999rpx;
+  box-shadow: 0 10rpx 24rpx rgba(0,0,0,.18);
   z-index: 10;
 }
-
 .post-card {
   position: relative;
-  background-color: #fff;
-  border-radius: 15rpx;
+  background: linear-gradient(145deg, rgba(255,255,255,.98), rgba(247,247,245,.94)), repeating-linear-gradient(125deg, rgba(17,17,17,.025) 0, rgba(17,17,17,.025) 2rpx, transparent 2rpx, transparent 28rpx);
+  border-radius: 28rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  border: 1rpx solid rgba(17,17,17,.08);
+  box-shadow: 0 22rpx 60rpx rgba(17,17,17,.05);
 }
-
-.post-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-}
-
-.user-avatar {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  background-color: #f0f0f0;
-  margin-right: 20rpx;
-}
-
-.user-detail {
-  display: flex;
-  flex-direction: column;
-}
-
-.user-name-row {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-}
-
-.user-name {
-  font-size: 28rpx;
-  color: #333;
-  font-weight: bold;
-}
-
-.post-time {
-  font-size: 24rpx;
-  color: #999;
-  margin-top: 5rpx;
-}
-
-.post-more {
-  font-size: 40rpx;
-  color: #999;
-  padding: 10rpx;
-}
-
-.post-content {
-  margin-bottom: 20rpx;
-}
-
-.post-tag {
-  display: inline-block;
-  padding: 4rpx 12rpx;
-  background-color: #e8f5e9;
-  color: #4caf50;
-  border-radius: 8rpx;
-  font-size: 22rpx;
-  margin-right: 10rpx;
-  margin-bottom: 10rpx;
-}
-
-.post-text {
-  font-size: 28rpx;
-  color: #333;
-  line-height: 1.6;
-  word-break: break-all;
-}
-
-.post-images {
-  display: flex;
-  gap: 10rpx;
-  margin-bottom: 20rpx;
-  flex-wrap: wrap;
-}
-
-.image-item {
-  width: 200rpx;
-  height: 200rpx;
-  border-radius: 10rpx;
-  background-color: #f0f0f0;
-}
-
-.product-info {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-  padding: 15rpx;
-  background-color: #fffef0;
-  border-radius: 10rpx;
-  margin-bottom: 20rpx;
-}
-
-.product-tag {
-  font-size: 24rpx;
-  color: #8bc34a;
-}
-
-.product-price {
-  font-size: 28rpx;
-  color: #f44336;
-  font-weight: bold;
-}
-
-.post-footer {
-  display: flex;
-  justify-content: space-around;
-  padding-top: 20rpx;
-  border-top: 1rpx solid #f0f0f0;
-}
-
-.footer-item {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  font-size: 24rpx;
-  color: #666;
-  padding: 10rpx 15rpx;
-}
-
-.footer-item:active {
-  background-color: #f5f5f5;
-  border-radius: 10rpx;
-}
-
-.footer-item .icon {
-  font-size: 28rpx;
-}
+.post-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20rpx; }
+.user-info { display:flex; align-items:center; }
+.user-avatar { width:80rpx; height:80rpx; border-radius:50%; background-color:#ececea; margin-right:20rpx; border:1rpx solid rgba(17,17,17,.08); }
+.user-detail { display:flex; flex-direction:column; }
+.user-name-row { display:flex; align-items:center; gap:10rpx; }
+.user-name { font-size:28rpx; color:#191919; font-weight:bold; }
+.post-time { font-size:24rpx; color:#8d8d87; margin-top:5rpx; }
+.post-more { font-size:40rpx; color:#8d8d87; padding:10rpx; }
+.post-content { margin-bottom:20rpx; }
+.post-tag { display:inline-block; padding:6rpx 14rpx; background-color:rgba(17,17,17,.04); color:#444440; border-radius:999rpx; border:1rpx solid rgba(17,17,17,.08); font-size:22rpx; margin-right:10rpx; margin-bottom:10rpx; }
+.post-text { display:block; font-size:28rpx; color:#262623; line-height:1.6; word-break:break-all; }
+.post-title { display:block; margin-bottom:8rpx; font-size:31rpx; color:#131313; font-weight:bold; line-height:1.4; }
+.post-tags { display:flex; flex-wrap:wrap; gap:10rpx; margin-top:14rpx; }
+.content-tag { font-size:22rpx; color:#5f5f59; background-color:rgba(17,17,17,.04); padding:4rpx 12rpx; border-radius:999rpx; border:1rpx solid rgba(17,17,17,.06); }
+.post-images { display:flex; gap:10rpx; margin-bottom:20rpx; flex-wrap:wrap; }
+.image-item { width:200rpx; height:200rpx; border-radius:18rpx; background-color:#ececea; border:1rpx solid rgba(17,17,17,.08); }
+.product-info { display:flex; align-items:center; gap:20rpx; padding:15rpx; background-color:rgba(17,17,17,.03); border-radius:16rpx; margin-bottom:20rpx; border:1rpx solid rgba(17,17,17,.08); }
+.product-tag { font-size:24rpx; color:#5e5e59; }
+.product-price { font-size:28rpx; color:#1b1b1b; font-weight:bold; }
+.post-footer { display:flex; justify-content:space-around; padding-top:20rpx; border-top:1rpx solid rgba(17,17,17,.08); }
+.footer-item { display:flex; align-items:center; gap:8rpx; font-size:24rpx; color:#676762; padding:10rpx 15rpx; }
+.footer-item:active { background-color:rgba(17,17,17,.05); border-radius:14rpx; }
+.footer-item .icon { font-size:28rpx; }
 </style>

@@ -3,6 +3,25 @@ import request from '../utils/request.js'
 import { getApiBaseUrl } from '@/utils/api'
   
 const USE_MOCK = false  
+const PENDING_POST_IMAGE_URLS_KEY = 'pendingPostImageUrls'
+
+const rememberPostImageUrls = (urls = []) => {
+  const validUrls = urls.filter(Boolean)
+  if (!validUrls.length) return
+  const existing = uni.getStorageSync(PENDING_POST_IMAGE_URLS_KEY) || []
+  const merged = [...existing, ...validUrls].filter((url, index, list) => list.indexOf(url) === index)
+  uni.setStorageSync(PENDING_POST_IMAGE_URLS_KEY, merged.slice(-9))
+}
+
+const extractUploadUrls = (res) => {
+  if (!res || !res.data) return []
+  if (typeof res.data === 'string') return [res.data]
+  if (res.data.url) return [res.data.url]
+  if (Array.isArray(res.data.list)) {
+    return res.data.list.map(item => item && item.url).filter(Boolean)
+  }
+  return []
+}
   
 export async function uploadBatchImages(files) {  
   return new Promise((resolve, reject) => {  
@@ -26,6 +45,7 @@ export async function uploadBatchImages(files) {
         try {  
           const res = JSON.parse(uploadFileRes.data)  
           if (res.code === 200) {  
+            rememberPostImageUrls(extractUploadUrls(res))
             resolve(res)  
           } else {  
             reject(res)  

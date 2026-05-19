@@ -184,9 +184,9 @@ const getStatusDesc = (s) => ['等待骑士接单...', '骑士正在火速配送
 .detail-page { min-height: 100vh; background: #F5F5F5; padding-bottom: 120rpx; }  
   
 .status-banner { padding: 40rpx; color: #fff; }  
-.bg-0 { background: linear-gradient(to right, #FFC069, #FAAD14); }  
-.bg-1 { background: linear-gradient(to right, #69C0FF, #1890FF); }  
-.bg-2 { background: linear-gradient(to right, #95DE64, #52C41A); }  
+.bg-0 { background: linear-gradient(to right, #cfcfcf, #9c9c9c); }  
+.bg-1 { background: linear-gradient(to right, #d4d4d4, #8f8f8f); }  
+.bg-2 { background: linear-gradient(to right, #bdbdbd, #7a7a7a); }  
 .bg-3 { background: #d9d9d9; color: #666; }  
 .status-text { font-size: 40rpx; font-weight: bold; display: block; }  
 .status-desc { font-size: 26rpx; opacity: 0.9; }  
@@ -204,19 +204,19 @@ const getStatusDesc = (s) => ['等待骑士接单...', '骑士正在火速配送
 .address-box { background: #F9F9F9; padding: 20rpx; border-radius: 12rpx; }  
 .row { display: flex; align-items: center; margin: 10rpx 0; }  
 .dot { width: 16rpx; height: 16rpx; border-radius: 50%; margin-right: 16rpx; }  
-.dot.blue { background: #1890FF; }  
-.dot.green { background: #52C41A; }  
+.dot.blue { background: #8a8a8a; }  
+.dot.green { background: #3f3f3f; }  
 .line { width: 2rpx; height: 30rpx; background: #ddd; margin-left: 7rpx; }  
 .addr { font-size: 28rpx; color: #333; }  
   
 .hidden-card .title { font-weight: bold; margin-bottom: 16rpx; }  
-.hidden-content { background: #FFFBE6; color: #FAAD14; padding: 20rpx; border-radius: 8rpx; font-family: monospace; }  
+.hidden-content { background: #f2f2f2; color: #525252; padding: 20rpx; border-radius: 8rpx; font-family: monospace; }  
 .tip { font-size: 24rpx; color: #ccc; margin-top: 10rpx; display: block; }  
   
 .footer-action { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 20rpx 30rpx; box-shadow: 0 -2rpx 10rpx rgba(0,0,0,0.05); }  
 .btn { border-radius: 40rpx; font-weight: bold; }  
-.btn.accept { background: #1890FF; color: #fff; }  
-.btn.confirm { background: #52C41A; color: #fff; }  
+.btn.accept { background: #5a5a5a; color: #fff; }  
+.btn.confirm { background: #3f3f3f; color: #fff; }  
 .btn.cancel { background: #ff4d4f; color: #fff; }  
 .btn.disabled { background: #f5f5f5; color: #999; }  
 </style>

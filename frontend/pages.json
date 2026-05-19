@@ -3,7 +3,7 @@
     {
       "path": "pages/index/index",
       "style": {
-        "navigationBarTitleText": "首页",
+        "navigationBarTitleText": "Aether AI Campus",
         "enablePullDownRefresh": true,
         "navigationStyle": "custom"
       }
@@ -11,7 +11,7 @@
     {
       "path": "pages/post/detail",
       "style": {
-        "navigationBarTitleText": "帖子详情",
+        "navigationBarTitleText": "Post Detail",
         "navigationStyle": "custom"
       }
     },
@@ -25,33 +25,35 @@
     {
       "path": "pages/publish/index",
       "style": {
-        "navigationBarTitleText": "发布内容"
+        "navigationBarTitleText": "Create",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/publish/Post",
       "style": {
-        "navigationBarTitleText": "发布帖子"
+        "navigationBarTitleText": "New Post"
       }
     },
     {
       "path": "pages/hot-posts/list",
       "style": {
-        "navigationBarTitleText": "热门帖子",
+        "navigationBarTitleText": "Hot Posts",
         "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/message/index",
       "style": {
-        "navigationBarTitleText": "消息列表",
+        "navigationBarTitleText": "Messages",
+        "navigationStyle": "custom",
         "enablePullDownRefresh": true
       }
     },
     {
       "path": "pages/chat/detail",
       "style": {
-        "navigationBarTitleText": "聊天详情",
+        "navigationBarTitleText": "Chat Detail",
         "enablePullDownRefresh": true,
         "navigationStyle": "custom"
       }
@@ -59,7 +61,7 @@
     {
       "path": "pages/profile/index",
       "style": {
-        "navigationBarTitleText": "个人中心",
+        "navigationBarTitleText": "Profile",
         "navigationStyle": "custom"
       }
     },
@@ -73,12 +75,6 @@
       "path": "pages/profile/edit",
       "style": {
         "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/profile/canvas-binding",
-      "style": {
-        "navigationBarTitleText": "连接 Canvas"
       }
     },
     {
@@ -108,7 +104,7 @@
     {
       "path": "pages/user/home",
       "style": {
-        "navigationBarTitleText": "他人主页"
+        "navigationBarTitleText": "User Home"
       }
     },
     {
@@ -131,64 +127,40 @@
       }
     },
     {
-      "path": "pages/info-center/index",
-      "style": {
-        "navigationBarTitleText": "信息订阅中心"
-      }
-    },
-    {
-      "path": "pages/info-center/subscriptions",
-      "style": {
-        "navigationBarTitleText": "订阅管理"
-      }
-    },
-    {
-      "path": "pages/info-center/detail",
-      "style": {
-        "navigationBarTitleText": "通知详情"
-      }
-    },
-    {
-      "path": "pages/admin/info-center",
-      "style": {
-        "navigationBarTitleText": "信息订阅后台"
-      }
-    },
-    {
       "path": "pages/login/register",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "注册账号"
+        "navigationBarTitleText": "Register"
       }
     }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "码住校园",
+    "navigationBarTitleText": "Aether AI Campus",
     "navigationBarBackgroundColor": "#F8F8F8",
     "backgroundColor": "#F8F8F8"
   },
   "tabBar": {
     "color": "#7A7E83",
-    "selectedColor": "#52C41A",
+    "selectedColor": "#111111",
     "borderStyle": "black",
     "backgroundColor": "#ffffff",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页"
+        "text": "Home"
       },
       {
         "pagePath": "pages/errand/index",
-        "text": "跑腿"
+        "text": "Errand"
       },
       {
         "pagePath": "pages/message/index",
-        "text": "消息"
+        "text": "Message"
       },
       {
         "pagePath": "pages/profile/index",
-        "text": "我的"
+        "text": "Me"
       }
     ]
   }

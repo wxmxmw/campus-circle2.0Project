@@ -129,24 +129,31 @@ const toggleMode = () => {
 .login-container {
   padding: 60rpx;
   min-height: 100vh;
-  background: #fff;
+  background: linear-gradient(135deg, #f4f4f4 0%, #e6e6e6 100%);
 }
 .header { margin-top: 100rpx; margin-bottom: 80rpx; }
 .title { font-size: 48rpx; font-weight: bold; display: block; margin-bottom: 20rpx; }
 .sub-title { font-size: 28rpx; color: #999; }
 
 .input-item { margin-bottom: 40rpx; border-bottom: 1rpx solid #eee; padding-bottom: 10rpx; }
+.form-box {
+  background: rgba(255,255,255,0.88);
+  border: 1rpx solid rgba(17,17,17,0.06);
+  border-radius: 28rpx;
+  padding: 36rpx;
+  box-shadow: 0 16rpx 40rpx rgba(17,17,17,0.06);
+}
 .label { font-size: 28rpx; color: #333; margin-bottom: 10rpx; display: block; font-weight: bold; }
 .input { height: 80rpx; font-size: 32rpx; }
 
 .submit-btn {
-  background: #52C41A; color: #fff; border-radius: 50rpx; 
+  background: #2f2f2f; color: #fff; border-radius: 50rpx; 
   margin-top: 60rpx; font-size: 32rpx; font-weight: bold;
 }
 .submit-btn:active { opacity: 0.9; }
 
 .actions { display: flex; justify-content: space-between; margin-top: 30rpx; font-size: 26rpx; color: #666; }
-.link { color: #52C41A; } /* 稍微加点颜色 */
+.link { color: #5d5d5d; }
 
 .dev-tip { margin-top: 100rpx; text-align: center; color: #ccc; font-size: 24rpx; }
 

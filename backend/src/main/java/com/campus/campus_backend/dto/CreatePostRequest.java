@@ -10,6 +10,8 @@ import java.util.Map;
 public class CreatePostRequest {
     @NotBlank(message = "content required")
     private String content;
+    private String title;
+    private List<String> tags;
     private List<String> images;
     private Boolean isAnonymous;
     private Map<String, Object> product;

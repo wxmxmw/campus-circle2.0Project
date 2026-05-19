@@ -5,6 +5,7 @@ import { defineStore } from 'pinia'
 import { setToken, removeToken, getToken } from '@/utils/request'
 
 import { ref, computed } from 'vue'
+import { toAbsoluteUrl } from '@/utils/api'
 
 export const useUserStore = defineStore('user', () => {
   // 状态
@@ -13,7 +14,7 @@ export const useUserStore = defineStore('user', () => {
   
   // 计算属性
   const isLoggedIn = computed(() => !!token.value)
-  const avatar = computed(() => userInfo.value?.avatarUrl || '../../static/default-avatar.png')
+  const avatar = computed(() => toAbsoluteUrl(userInfo.value?.avatarUrl, '/static/default-avatar.png'))
   const nickname = computed(() => userInfo.value?.nickname || '未登录用户')
   
   // [新增] 管理员判断逻辑

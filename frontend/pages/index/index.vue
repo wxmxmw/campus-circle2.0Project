@@ -1,61 +1,43 @@
 <template>
   <view class="home-page">
-    <!-- 顶部导航 - 吸顶 -->
     <view class="header" :class="{ 'is-fixed': isNavFixed }">
       <view class="school-info">
-        <view class="avatar">🎓</view>
+        <view class="avatar">AI</view>
         <view class="school-name">
-          <text class="name">nopay校园圈</text>
-          <text class="sub-name">同济大学！！</text>
+          <text class="name">Aether AI Campus</text>
+          <text class="sub-name">Tongji Smart Community</text>
         </view>
       </view>
       <view class="header-actions">
-        <text class="icon">⋮</text>
-        <text class="icon">⊙</text>
+        <text class="icon">◦</text>
+        <text class="icon">⋯</text>
       </view>
     </view>
 
-    <!-- 占位元素 -->
     <view class="header-placeholder" v-if="isNavFixed"></view>
 
-    <!-- 搜索栏 -->
     <view class="search-bar">
-      <text class="search-icon">🔍</text>
-      <input 
-          class="search-input"
-          type="text"
-          v-model="keyword"
-          placeholder="点我查找内容"
-          @confirm="search"
-        />
+      <text class="search-icon">S</text>
+      <input
+        class="search-input"
+        type="text"
+        v-model="keyword"
+        placeholder="Search posts, users, or keywords"
+        @confirm="search"
+      />
     </view>
 
-    <view class="info-entry" @click="goInfoCenter">
-      <view>
-        <text class="info-entry-title">信息订阅中心</text>
-        <text class="info-entry-subtitle">聚合公众号、教务与 Canvas 通知</text>
-      </view>
-      <text class="info-entry-arrow">></text>
-    </view>
+    <HotTopics :topics="topics" @topic-click="handleTopicClick" @more-click="handleTopicsMore" />
 
-    <!-- 热门话题 -->
-    <HotTopics 
-      :topics="topics"
-      @topic-click="handleTopicClick"
-      @more-click="handleTopicsMore"
-    />
-
-    <!-- 分类导航 -->
-    <CategoryNav 
+    <CategoryNav
       :categories="categories"
       :current-category="currentCategory"
       :is-fixed="isNavFixed"
       @category-change="switchCategory"
     />
 
-    <!-- 帖子列表 -->
     <view class="post-list">
-      <PostCard 
+      <PostCard
         v-for="post in posts"
         :key="post.id"
         :post="post"
@@ -66,247 +48,162 @@
         @product-click="handleProductClick"
         @comment-click="handleCommentClick"
         @like-click="handleLikeClick"
-		@top-click="handleTopClick"
+        @top-click="handleTopClick"
       />
     </view>
 
-    <!-- 底部占位 -->
     <view class="bottom-space"></view>
 
-    <!-- TabBar -->
-    <TabBar 
-      :current-tab="currentTab"
-      @tab-change="switchTab"
-    />
+    <TabBar :current-tab="currentTab" @tab-change="switchTab" />
   </view>
 </template>
-
 
 <script>
 import TabBar from '@/components/TabBar.vue';
 import PostCard from '@/components/PostCard.vue';
 import HotTopics from '@/components/HotTopics.vue';
 import CategoryNav from '@/components/CategoryNav.vue';
-import {userApi} from '@/api/user.js';
+import { userApi } from '@/api/user.js';
 import { setPostTop, likePost } from '@/api/post.js';
-
-// ⭐ 引入 API
-import { 
-  getHotTopics, 
-  getCategories, 
-  getPosts,
-  searchPosts
-} from '@/api/index.js';
+import { toAbsoluteUrl } from '@/utils/api';
+import { getHotTopics, getCategories, getPosts, searchPosts } from '@/api/index.js';
 
 export default {
-  components: {
-    TabBar,
-    PostCard,
-    HotTopics,
-    CategoryNav
-  },
-
+  components: { TabBar, PostCard, HotTopics, CategoryNav },
   data() {
     return {
       currentTab: 'home',
       currentCategory: 0,
       isNavFixed: false,
-
       topics: [],
       categories: [],
       posts: [],
       keyword: '',
-
       page: 1,
       pageSize: 10,
       hasMore: true,
     };
   },
-
   async onLoad() {
-    await Promise.all([
-      this.loadTopics(),
-      this.loadCategories(),
-      this.loadPosts()
-    ]);
+    this.syncPageTitle('Aether AI Campus');
+    await Promise.all([this.loadTopics(), this.loadCategories(), this.loadPosts()]);
   },
-
   onShow() {
+    this.syncPageTitle('Aether AI Campus');
     uni.hideTabBar({ animation: false });
     this.loadPosts(true);
   },
-
   onPageScroll(e) {
     this.isNavFixed = e.scrollTop > 400;
   },
-
   methods: {
-    /** 加载热门话题 */
-    async loadTopics() {
-      const res = await getHotTopics();
-      if (res.code === 200) {
-        this.topics = res.data;
+    syncPageTitle(title) {
+      uni.setNavigationBarTitle({
+        title
+      });
+      if (typeof document !== 'undefined') {
+        document.title = title;
       }
     },
+    async loadTopics() {
+      const res = await getHotTopics();
+      if (res.code === 200) this.topics = res.data;
+    },
     async handleTopClick(post) {
-	  // 1. 如果已经置顶 → 取消置顶
-	  if (post.isTop) {
-	    const res = await setPostTop(post.id, false);
-	    if (res.code === 200) {
-	      uni.showToast({ title: '已取消置顶', icon: 'none' });
-	      this.loadPosts(true);
-	    }
-	    return;
-	  }
-	  // 2. 检查积分（后端要求至少30积分，后端会扣减）
-	  const userRes = await userApi.getUserInfo();
-	  const user = userRes.data;
-	  if ((user.points || 0) < 30) {
-	    return uni.showToast({
-	      title: '积分不足，需30积分置顶',
-	      icon: 'none'
-	    });
-	  }
-	  // 3. 调用置顶接口（后端扣减积分并记录交易）
-	  const res = await setPostTop(post.id, true);
-	  if (res.code === 200) {
-	    uni.showToast({ title: '置顶成功', icon: 'success' });
-	    this.loadPosts(true);
-	  }
-	},
-
-
-    /** 加载分类 */
+      if (post.isTop) {
+        const res = await setPostTop(post.id, false);
+        if (res.code === 200) {
+          uni.showToast({ title: 'Unpinned', icon: 'none' });
+          this.loadPosts(true);
+        }
+        return;
+      }
+      const userRes = await userApi.getUserInfo();
+      const user = userRes.data;
+      if ((user.points || 0) < 30) {
+        return uni.showToast({ title: 'Need 30 points to pin', icon: 'none' });
+      }
+      const res = await setPostTop(post.id, true);
+      if (res.code === 200) {
+        uni.showToast({ title: 'Pinned', icon: 'success' });
+        this.loadPosts(true);
+      }
+    },
     async loadCategories() {
       const res = await getCategories();
       if (res.code === 200) {
         const raw = Array.isArray(res.data?.list) ? res.data.list : [];
         const cats = raw.filter(c => c && (c.isActive === undefined || c.isActive));
-        // 保证有“全部”
-        if (!cats.some(c => c && c.id === 0)) {
-          cats.unshift({ id: 0, name: '全部' });
-        }
+        if (!cats.some(c => c && c.id === 0)) cats.unshift({ id: 0, name: 'All' });
         this.categories = cats;
       }
     },
-
-    /** 加载帖子列表 */
     async loadPosts(reset = true) {
       if (reset) {
         this.page = 1;
         this.posts = [];
       }
-    
-      const params = {
-        page: this.page,
-        pageSize: this.pageSize
-      };
-      if (this.currentCategory && this.currentCategory > 0) {
-        params.categoryId = this.currentCategory;
-      }
+      const params = { page: this.page, pageSize: this.pageSize };
+      if (this.currentCategory && this.currentCategory > 0) params.categoryId = this.currentCategory;
       const res = await getPosts(params);
-    
       if (res.code === 200) {
         const list = res.data.list;
-    
-        // 合并数据
         this.posts = reset ? list : [...this.posts, ...list];
         this.hasMore = res.data.hasMore;
-    
-        if (res.data.hasMore) {
-          this.page++;
-        }
-    
-        // ⭐ 排序：置顶优先，其次按时间倒序
+        if (res.data.hasMore) this.page++;
         this.posts.sort((a, b) => {
           const topDiff = (b.isTop ? 1 : 0) - (a.isTop ? 1 : 0);
           if (topDiff !== 0) return topDiff;
-          const tb = new Date(b.time).getTime() || 0;
-          const ta = new Date(a.time).getTime() || 0;
-          return tb - ta;
+          return (new Date(b.time).getTime() || 0) - (new Date(a.time).getTime() || 0);
         });
       }
     },
-
-
-    /** 切换分类并重新加载 */
     async switchCategory(id) {
       this.currentCategory = id;
       await this.loadPosts(true);
     },
-
     async search() {
       const kw = (this.keyword || '').trim();
-      if (!kw) {
-        await this.loadPosts(true);
-        return;
-      }
+      if (!kw) return this.loadPosts(true);
       const res = await searchPosts(kw);
       if (res.code === 200) {
-        const list = res.data?.list || [];
-        this.posts = list;
+        this.posts = res.data?.list || [];
         this.hasMore = !!res.data?.hasMore;
         this.page = 1;
-        this.posts.sort((a, b) => {
-          const topDiff = (b.isTop ? 1 : 0) - (a.isTop ? 1 : 0);
-          if (topDiff !== 0) return topDiff;
-          const tb = new Date(b.time).getTime() || 0;
-          const ta = new Date(a.time).getTime() || 0;
-          return tb - ta;
-        });
       }
     },
-
     handleTopicClick(post) {
-      uni.navigateTo({ 
-        url: `/pages/post/detail?id=${post.id}`
-      });
+      uni.navigateTo({ url: `/pages/post/detail?id=${post.id}` });
     },
-
     handleTopicsMore() {
       uni.navigateTo({ url: '/pages/hot-posts/list' });
     },
-
-    goInfoCenter() {
-      uni.navigateTo({ url: '/pages/info-center/index' });
-    },
-
     switchTab(tabId) {
-      if (tabId === 'publish') {
-        uni.navigateTo({ url: '/pages/publish/index' });
-      } else {
-        this.currentTab = tabId;
-      }
+      if (tabId === 'publish') uni.navigateTo({ url: '/pages/publish/index' });
+      else this.currentTab = tabId;
     },
-
     handleUserClick(post) {
-      uni.navigateTo({ url: `/pages/user/home?id=${userId}` })
+      const userId = post.userId || post.user?.id;
+      if (userId) uni.navigateTo({ url: `/pages/user/home?id=${userId}` });
     },
-
-    handlePostMore(post) {
-      uni.showActionSheet({
-        itemList: ['收藏', '分享', '举报']
-      });
+    handlePostMore() {
+      uni.showActionSheet({ itemList: ['Collect', 'Share', 'Report'] });
     },
-
     handlePostClick(post) {
       uni.navigateTo({ url: `/pages/post/detail?id=${post.id}` });
     },
-
     handleImageClick({ post, imageIndex }) {
       if (post.images && post.images.length > 0 && !post.images[0].startsWith('#')) {
-        uni.previewImage({ urls: post.images, current: imageIndex });
+        const urls = post.images.map(img => toAbsoluteUrl(img));
+        uni.previewImage({ urls, current: imageIndex });
       }
     },
-
     handleProductClick(post) {
       uni.navigateTo({ url: `/pages/post/detail?id=${post.id}` });
     },
-
     handleCommentClick(post) {
       uni.navigateTo({ url: `/pages/post/detail?id=${post.id}&focus=comment` });
     },
-
     handleLikeClick({ post, isLiked }) {
       (async () => {
         try {
@@ -316,12 +213,11 @@ export default {
             if (target) {
               target.isLiked = isLiked;
               const cur = parseInt(target.likes || 0) || 0;
-              const next = cur + (isLiked ? 1 : -1);
-              target.likes = next < 0 ? 0 : next;
+              target.likes = Math.max(0, cur + (isLiked ? 1 : -1));
             }
           }
         } catch (e) {
-          uni.showToast({ title: '点赞失败', icon: 'none' });
+          uni.showToast({ title: 'Like failed', icon: 'none' });
         }
       })();
     }
@@ -329,148 +225,20 @@ export default {
 };
 </script>
 
-
-
-
 <style scoped>
-.home-page {
-  min-height: 100vh;
-  background-color: #f5f5f5;
-  padding-bottom: 150rpx;
-}
-
-/* 顶部导航 */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20rpx 30rpx;
-  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
-  transition: all 0.3s ease;
-  z-index: 100;
-}
-
-/* 顶部导航吸顶样式 */
-.header.is-fixed {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: rgba(232, 245, 233, 0.95); /* 半透明效果 */
-  backdrop-filter: blur(20rpx);
-  -webkit-backdrop-filter: blur(20rpx);
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
-}
-
-/* header 占位元素 */
-.header-placeholder {
-  height: 120rpx; /* 和 header 的高度一致 */
-}
-
-.school-info {
-  display: flex;
-  align-items: center;
-}
-
-.avatar {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  background-color: #c8e6c9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 40rpx;
-  margin-right: 20rpx;
-}
-
-.school-name {
-  display: flex;
-  flex-direction: column;
-}
-
-.name {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
-}
-
-.sub-name {
-  font-size: 24rpx;
-  color: #666;
-  margin-top: 4rpx;
-}
-
-.header-actions {
-  display: flex;
-  gap: 30rpx;
-}
-
-.icon {
-  font-size: 40rpx;
-  color: #333;
-}
-
-/* 搜索栏 */
-.search-bar {
-  margin: 20rpx 30rpx;
-  padding: 20rpx 30rpx;
-  background-color: #fff;
-  border-radius: 50rpx;
-  display: flex;
-  align-items: center;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
-}
-
-.search-icon {
-  margin-right: 15rpx;
-  font-size: 32rpx;
-}
-
-.search-text {
-  color: #999;
-  font-size: 28rpx;
-}
-
-.info-entry {
-  margin: 0 30rpx 20rpx;
-  padding: 28rpx 30rpx;
-  border-radius: 28rpx;
-  background: linear-gradient(135deg, #1f5f46 0%, #2f855a 65%, #e7f0dc 100%);
-  color: #fff;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 10rpx 28rpx rgba(31, 95, 70, 0.18);
-}
-
-.info-entry-title,
-.info-entry-subtitle {
-  display: block;
-}
-
-.info-entry-title {
-  font-size: 32rpx;
-  font-weight: bold;
-}
-
-.info-entry-subtitle {
-  margin-top: 8rpx;
-  font-size: 23rpx;
-  opacity: 0.9;
-}
-
-.info-entry-arrow {
-  font-size: 34rpx;
-  font-family: monospace;
-}
-
-/* 帖子列表 */
-.post-list {
-  padding: 20rpx 30rpx;
-}
-
-.bottom-space {
-  height: 20rpx;
-}
+.home-page { min-height: 100vh; padding-bottom: 150rpx; }
+.header { display:flex; justify-content:space-between; align-items:center; margin:18rpx 20rpx 0; padding:26rpx 28rpx; background:linear-gradient(145deg, rgba(255,255,255,.92), rgba(247,247,245,.88)), repeating-linear-gradient(120deg, rgba(17,17,17,.025) 0, rgba(17,17,17,.025) 2rpx, transparent 2rpx, transparent 26rpx); border:1rpx solid rgba(17,17,17,.08); border-radius:28rpx; box-shadow:0 20rpx 56rpx rgba(17,17,17,.06); transition:all .3s ease; z-index:100; }
+.header.is-fixed { position:fixed; top:12rpx; left:20rpx; right:20rpx; backdrop-filter:blur(26rpx); -webkit-backdrop-filter:blur(26rpx); box-shadow:0 16rpx 42rpx rgba(17,17,17,.08); }
+.header-placeholder { height:146rpx; }
+.school-info { display:flex; align-items:center; }
+.avatar { width:80rpx; height:80rpx; border-radius:50%; background:linear-gradient(145deg, #1b1b1a, #4b4b46); color:#fff; display:flex; align-items:center; justify-content:center; font-size:24rpx; font-weight:700; margin-right:20rpx; box-shadow:0 12rpx 24rpx rgba(17,17,17,.18); }
+.name { font-size:32rpx; font-weight:bold; color:#171717; }
+.sub-name { font-size:24rpx; color:#6d6d68; margin-top:4rpx; }
+.header-actions { display:flex; gap:24rpx; }
+.icon { font-size:38rpx; color:#444440; }
+.search-bar { margin:22rpx 30rpx 0; padding:18rpx 26rpx; background:rgba(255,255,255,.78); border-radius:999rpx; display:flex; align-items:center; border:1rpx solid rgba(17,17,17,.08); box-shadow:0 14rpx 36rpx rgba(17,17,17,.04); backdrop-filter:blur(18rpx); -webkit-backdrop-filter:blur(18rpx); }
+.search-icon { margin-right:15rpx; font-size:24rpx; color:#8d8d87; }
+.search-input { flex:1; color:#777772; font-size:28rpx; }
+.post-list { padding:20rpx 30rpx; }
+.bottom-space { height:20rpx; }
 </style>

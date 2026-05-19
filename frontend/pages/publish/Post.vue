@@ -1,23 +1,20 @@
 <template>
   <view class="publish-page">
-    <!-- 顶部导航 -->
     <view class="nav-header">
       <text class="close-btn" @click="goBack">×</text>
       <text class="nav-title">发布帖子</text>
       <view class="placeholder"></view>
     </view>
 
-    <!-- 话题选择区域 -->
     <view class="topic-section">
       <view class="topic-header" @click="toggleTopicPanel">
         <text class="topic-title">选择话题</text>
         <view class="topic-hint">
-          <text>选择合适的话题会有更多围观哦~</text>
-          <text class="arrow" :class="{ expanded: showTopicPanel }">∧</text>
+          <text>选一个合适的话题，会更容易被看到</text>
+          <text class="arrow" :class="{ expanded: showTopicPanel }">⌄</text>
         </view>
       </view>
 
-      <!-- 话题标签列表 -->
       <view v-show="showTopicPanel" class="topic-list">
         <view
           v-for="topic in topicList"
@@ -31,7 +28,6 @@
         </view>
       </view>
 
-      <!-- 已选话题显示 -->
       <view v-if="selectedTopic && !showTopicPanel" class="selected-topic">
         <view class="topic-tag active">
           <text v-if="selectedTopicData.icon" class="topic-icon">{{ selectedTopicData.icon }}</text>
@@ -41,21 +37,70 @@
       </view>
     </view>
 
-    <!-- 内容输入区域 -->
     <view class="content-section">
+      <input
+        class="title-input"
+        v-model="title"
+        maxlength="60"
+        placeholder="标题（可选，AI 可生成）"
+      />
+
       <textarea
         class="content-input"
         v-model="content"
-        placeholder="尽情发言吧..."
+        placeholder="写点想说的内容..."
         :maxlength="2000"
         auto-height
       ></textarea>
 
-      <!-- 字数统计 -->
       <view class="word-count">{{ content.length }}/2000</view>
     </view>
 
-    <!-- 图片上传区域 -->
+    <view class="ai-section">
+      <view class="ai-header">
+        <view>
+          <text class="ai-title">AI 发帖助手</text>
+          <text class="ai-subtitle">生成标题、润色正文、推荐话题和标签</text>
+        </view>
+        <button class="ai-btn" :disabled="aiLoading" @click="handleAiAssist">
+          {{ aiLoading ? '生成中...' : '一键生成' }}
+        </button>
+      </view>
+
+      <view v-if="aiSuggestion" class="ai-result">
+        <view class="ai-result-item">
+          <text class="ai-label">标题建议</text>
+          <text class="ai-value">{{ aiSuggestion.title }}</text>
+          <button class="small-btn" @click="useAiTitle">使用标题</button>
+        </view>
+
+        <view class="ai-result-item">
+          <text class="ai-label">润色正文</text>
+          <text class="ai-value">{{ aiSuggestion.polishedContent }}</text>
+          <button class="small-btn" @click="useAiContent">使用正文</button>
+        </view>
+
+        <view class="ai-result-item">
+          <text class="ai-label">推荐话题</text>
+          <text class="ai-value">{{ aiSuggestion.recommendedCategoryName }}</text>
+          <button class="small-btn" @click="useAiCategory">使用话题</button>
+        </view>
+
+        <view class="ai-result-item">
+          <text class="ai-label">推荐标签</text>
+          <view class="tag-list">
+            <text
+              v-for="tag in aiSuggestion.tags"
+              :key="tag"
+              class="ai-tag"
+              :class="{ active: isSelectedTag(tag) }"
+              @click="toggleTag(tag)"
+            >{{ tag }}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
     <view class="image-section">
       <view class="image-list">
         <view
@@ -67,7 +112,6 @@
           <view class="delete-btn" @click="deleteImage(index)">×</view>
         </view>
 
-        <!-- 添加图片按钮 -->
         <view
           v-if="imageList.length < 9"
           class="add-image-btn"
@@ -76,17 +120,16 @@
           <text class="add-icon">+</text>
         </view>
       </view>
-      <text class="image-tip">最多上传9张图片</text>
+      <text class="image-tip">最多上传 9 张图片</text>
     </view>
 
-    <!-- 闲置商品信息（仅闲置话题显示） -->
     <view v-if="selectedTopic === 1" class="product-section">
       <view class="section-title">商品信息</view>
 
       <view class="form-item">
         <text class="label">价格</text>
         <view class="price-input-wrapper">
-          <text class="price-symbol">¥</text>
+          <text class="price-symbol">￥</text>
           <input
             class="price-input"
             type="digit"
@@ -99,32 +142,19 @@
       <view class="form-item">
         <text class="label">交易方式</text>
         <view class="trade-options">
-          <view
-            class="trade-option"
-            :class="{ active: tradeMethod === 'face' }"
-            @click="tradeMethod = 'face'"
-          >
+          <view class="trade-option" :class="{ active: tradeMethod === 'face' }" @click="tradeMethod = 'face'">
             <text>当面交易</text>
           </view>
-          <view
-            class="trade-option"
-            :class="{ active: tradeMethod === 'delivery' }"
-            @click="tradeMethod = 'delivery'"
-          >
+          <view class="trade-option" :class="{ active: tradeMethod === 'delivery' }" @click="tradeMethod = 'delivery'">
             <text>邮寄</text>
           </view>
-          <view
-            class="trade-option"
-            :class="{ active: tradeMethod === 'both' }"
-            @click="tradeMethod = 'both'"
-          >
+          <view class="trade-option" :class="{ active: tradeMethod === 'both' }" @click="tradeMethod = 'both'">
             <text>都可以</text>
           </view>
         </view>
       </view>
     </view>
 
-    <!-- 投票选项区域（仅投票话题显示） -->
     <view v-if="selectedTopic === 4" class="vote-section">
       <view class="section-title">投票选项</view>
       <view v-for="(option, index) in voteOptions" :key="index" class="vote-option-item">
@@ -133,18 +163,13 @@
           v-model="voteOptions[index]"
           placeholder="请输入投票选项"
         />
-        <text
-          class="delete-option"
-          @click="removeVoteOption(index)"
-          v-if="voteOptions.length > 2"
-        >×</text>
+        <text class="delete-option" @click="removeVoteOption(index)" v-if="voteOptions.length > 2">×</text>
       </view>
       <view class="add-option-btn" @click="addVoteOption" v-if="voteOptions.length < 6">
         <text>+ 添加选项</text>
       </view>
     </view>
 
-    <!-- 更多设置 -->
     <view class="more-settings">
       <view class="setting-item">
         <text class="setting-label">匿名发布</text>
@@ -154,13 +179,8 @@
       </view>
     </view>
 
-    <!-- 底部发布按钮 -->
     <view class="bottom-bar">
-      <view
-        class="publish-btn"
-        :class="{ disabled: !canPublish }"
-        @click="handlePublish"
-      >
+      <view class="publish-btn" :class="{ disabled: !canPublish }" @click="handlePublish">
         发布
       </view>
     </view>
@@ -170,230 +190,145 @@
 <script>
 import { publishPost } from '../../api/post.js';
 import { getCategories } from '@/api/index.js';
-// 引入图片上传接口（需确保该接口已定义）
+import { assistPost } from '@/api/ai.js';
 import { commonApi } from '@/api/common.js';
+
+const extractUploadedImageUrl = (res) => {
+  const data = res && res.data;
+  if (typeof data === 'string') return data;
+  if (data && typeof data.url === 'string') return data.url;
+  if (data && Array.isArray(data.list) && data.list.length > 0 && data.list[0]?.url) return data.list[0].url;
+  if (res && typeof res.url === 'string') return res.url;
+  throw new Error('上传响应格式错误: ' + JSON.stringify(res));
+};
 
 export default {
   name: 'PublishPost',
   data() {
     return {
-      // 话题相关
       showTopicPanel: true,
       selectedTopic: null,
       topicList: [],
-      
-      // 内容相关
+      title: '',
       content: '',
+      aiLoading: false,
+      aiSuggestion: null,
+      selectedTags: [],
       imageList: [],
-      
-      // 闲置商品相关
       price: '',
       tradeMethod: 'face',
-      
-      // 投票相关
       voteOptions: ['', ''],
-      
-      // 设置
       isAnonymous: false,
-      
-      // 发布状态
       publishing: false
     };
   },
   async mounted() {
     try {
       const res = await getCategories();
-      if (res.code === 200) {
-        const list = Array.isArray(res.data?.list) ? res.data.list : [];
-        this.topicList = list;
-      }
+      if (res.code === 200) this.topicList = Array.isArray(res.data?.list) ? res.data.list : [];
     } catch (error) {
       console.error('获取话题列表失败:', error);
       uni.showToast({ title: '获取话题失败', icon: 'none' });
     }
   },
   computed: {
-    // 已选话题数据
     selectedTopicData() {
       return this.topicList.find(t => t.id === this.selectedTopic) || {};
     },
-    
-    // 是否可以发布
     canPublish() {
-      // 必须有内容或图片
       const hasContent = this.content.trim().length > 0 || this.imageList.length > 0;
-      
-      // 如果是闲置，必须有价格
-      if (this.selectedTopic === 1 && !this.price) {
-        return false;
-      }
-      
-      // 如果是投票，必须至少有2个非空选项
+      if (this.selectedTopic === 1 && !this.price) return false;
       if (this.selectedTopic === 4) {
         const validOptions = this.voteOptions.filter(o => o.trim());
-        if (validOptions.length < 2) {
-          return false;
-        }
+        if (validOptions.length < 2) return false;
       }
-      
       return hasContent && !this.publishing;
     }
   },
   methods: {
-    // 返回上一页
-    goBack() {
-      uni.navigateBack();
-    },
-    
-    // 切换话题面板展开/收起
-    toggleTopicPanel() {
-      this.showTopicPanel = !this.showTopicPanel;
-    },
-    
-    // 选择话题
-    selectTopic(topic) {
-      this.selectedTopic = topic.id;
-      this.showTopicPanel = false;
-    },
-    
-    // 清除已选话题
-    clearTopic() {
-      this.selectedTopic = null;
-      this.showTopicPanel = true;
-    },
-    
-    // 选择图片
+    goBack() { uni.navigateBack(); },
+    toggleTopicPanel() { this.showTopicPanel = !this.showTopicPanel; },
+    selectTopic(topic) { this.selectedTopic = topic.id; this.showTopicPanel = false; },
+    clearTopic() { this.selectedTopic = null; this.showTopicPanel = true; },
     chooseImage() {
       const remainCount = 9 - this.imageList.length;
-      
       uni.chooseImage({
         count: remainCount,
         sizeType: ['compressed'],
         sourceType: ['album', 'camera'],
-        success: (res) => {
-          this.imageList = [...this.imageList, ...res.tempFilePaths];
-        },
-        fail: () => {
-          uni.showToast({ title: '选择图片失败', icon: 'none' });
+        success: (res) => { this.imageList = [...this.imageList, ...res.tempFilePaths]; },
+        fail: () => { uni.showToast({ title: '选择图片失败', icon: 'none' }); }
+      });
+    },
+    previewImage(index) { uni.previewImage({ current: index, urls: this.imageList }); },
+    deleteImage(index) { this.imageList.splice(index, 1); },
+    addVoteOption() { if (this.voteOptions.length < 6) this.voteOptions.push(''); },
+    removeVoteOption(index) { if (this.voteOptions.length > 2) this.voteOptions.splice(index, 1); },
+    toggleAnonymous() { this.isAnonymous = !this.isAnonymous; },
+    async handleAiAssist() {
+      const draft = this.content.trim();
+      if (!draft) return uni.showToast({ title: '请先输入正文', icon: 'none' });
+      this.aiLoading = true;
+      try {
+        const res = await assistPost({ content: draft, categoryId: this.selectedTopic });
+        if (res.code === 200) {
+          this.aiSuggestion = res.data;
+          this.selectedTags = [];
+          uni.showToast({ title: 'AI 建议已生成', icon: 'none' });
+        } else {
+          uni.showToast({ title: res.message || 'AI 生成失败', icon: 'none' });
         }
-      });
-    },
-    
-    // 预览图片
-    previewImage(index) {
-      uni.previewImage({
-        current: index,
-        urls: this.imageList
-      });
-    },
-    
-    // 删除图片
-    deleteImage(index) {
-      this.imageList.splice(index, 1);
-    },
-    
-    // 添加投票选项
-    addVoteOption() {
-      if (this.voteOptions.length < 6) {
-        this.voteOptions.push('');
+      } catch (error) {
+        uni.showToast({ title: error.message || 'AI 生成失败', icon: 'none' });
+      } finally {
+        this.aiLoading = false;
       }
     },
-    
-    // 移除投票选项
-    removeVoteOption(index) {
-      if (this.voteOptions.length > 2) {
-        this.voteOptions.splice(index, 1);
-      }
+    useAiTitle() { if (this.aiSuggestion?.title) this.title = this.aiSuggestion.title; },
+    useAiContent() { if (this.aiSuggestion?.polishedContent) this.content = this.aiSuggestion.polishedContent; },
+    useAiCategory() {
+      if (!this.aiSuggestion?.recommendedCategoryId) return;
+      const matched = this.topicList.find(item => item.id === this.aiSuggestion.recommendedCategoryId);
+      if (matched) this.selectTopic(matched);
     },
-    
-    // 切换匿名发布状态
-    toggleAnonymous() {
-      this.isAnonymous = !this.isAnonymous;
+    isSelectedTag(tag) { return this.selectedTags.includes(tag); },
+    toggleTag(tag) {
+      if (!tag) return;
+      const index = this.selectedTags.indexOf(tag);
+      if (index >= 0) return this.selectedTags.splice(index, 1);
+      if (this.selectedTags.length >= 5) return uni.showToast({ title: '最多选择 5 个标签', icon: 'none' });
+      this.selectedTags.push(tag);
     },
-    
-async uploadImages(tempFiles) {  
-  console.log('【开始上传图片】', tempFiles.length, '张')  
-    
-  const uploadPromises = tempFiles.map(file => {  
-    console.log('【上传单个文件】', file)  
-    return commonApi.uploadBatchImages(file)  
-  })  
-    
-  const results = await Promise.all(uploadPromises)  
-  console.log('【上传结果】', results)  
-    
-  // 修复响应格式解析  
-  const urls = results.map(res => {  
-    console.log('【单个响应】', res)  
-      
-    // 检查响应格式  
-    if (res.code === 200 && res.data) {  
-      // 如果data直接包含url  
-      if (res.data.url) {  
-        return res.data.url  
-      }  
-      // 如果data是url本身  
-      if (typeof res.data === 'string') {  
-        return res.data  
-      }  
-      // 如果data包含在list中  
-      if (res.data.list && res.data.list.length > 0) {  
-        return res.data.list[0].url  
-      }  
-    }  
-      
-    throw new Error('上传响应格式错误: ' + JSON.stringify(res))  
-  })  
-    
-  return urls  
-},
-    
-    // 发布帖子
-    async handlePublish() {  
-      if (!this.canPublish || this.publishing) return;  
-        
-      this.publishing = true;  
-        
-      try {  
-        // 先上传图片  
-        let uploadedImages = [];  
-        if (this.imageList.length > 0) {  
-          uploadedImages = await this.uploadImages(this.imageList);  
-        }  
-          
-        const postData = {  
-          categoryId: this.selectedTopic,  
-          topicId: this.selectedTopic,  
-          topicName: this.selectedTopicData.name,  
-          content: this.content,  
-          images: uploadedImages,  
-          isAnonymous: this.isAnonymous  
-        };  
-        
-        // 闲置商品信息
+    async uploadImages(tempFiles) {
+      const results = await Promise.all(tempFiles.map(file => commonApi.uploadBatchImages(file)));
+      return results.map(extractUploadedImageUrl);
+    },
+    async handlePublish() {
+      if (!this.canPublish || this.publishing) return;
+      this.publishing = true;
+      try {
+        let uploadedImages = [];
+        if (this.imageList.length > 0) uploadedImages = await this.uploadImages(this.imageList);
+        const postData = {
+          categoryId: this.selectedTopic,
+          topicId: this.selectedTopic,
+          topicName: this.selectedTopicData.name,
+          title: this.title,
+          content: this.content,
+          tags: this.selectedTags,
+          images: uploadedImages,
+          isAnonymous: this.isAnonymous
+        };
         if (this.selectedTopic === 1) {
-          postData.product = {
-            price: parseFloat(this.price) || 0,
-            tradeMethod: this.tradeMethod
-          };
+          postData.product = { price: parseFloat(this.price) || 0, tradeMethod: this.tradeMethod };
         }
-        
-        // 投票信息
         if (this.selectedTopic === 4) {
-          postData.vote = {
-            options: this.voteOptions.filter(o => o.trim())
-          };
+          postData.vote = { options: this.voteOptions.filter(o => o.trim()) };
         }
-        
-        // 调用发布接口
         const res = await publishPost(postData);
-        
         if (res.code === 200) {
           uni.showToast({ title: '发布成功', icon: 'success' });
-          // 延迟返回
-          setTimeout(() => {
-            uni.navigateBack();
-          }, 1500);
+          setTimeout(() => { uni.navigateBack(); }, 1500);
         } else {
           uni.showToast({ title: res.message || '发布失败', icon: 'none' });
         }
@@ -409,363 +344,60 @@ async uploadImages(tempFiles) {
 </script>
 
 <style scoped>
-.publish-page {
-  min-height: 100vh;
-  background-color: #fff;
-  padding-bottom: 140rpx;
+.publish-page { min-height: 100vh; padding: 18rpx 20rpx 160rpx; }
+.nav-header,.topic-section,.content-section,.ai-section,.image-section,.product-section,.vote-section,.more-settings {
+  background: linear-gradient(145deg, rgba(255,255,255,.96), rgba(247,247,245,.94)), repeating-linear-gradient(125deg, rgba(17,17,17,.02) 0, rgba(17,17,17,.02) 2rpx, transparent 2rpx, transparent 22rpx);
+  border: 1rpx solid rgba(17,17,17,.08); border-radius: 28rpx; box-shadow: 0 20rpx 56rpx rgba(17,17,17,.05);
 }
-
-/* 顶部导航 */
-.nav-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 30rpx;
-  border-bottom: 1rpx solid #eee;
-  position: sticky;
-  top: 0;
-  background-color: #fff;
-  z-index: 100;
-}
-
-.close-btn {
-  font-size: 50rpx;
-  color: #333;
-  padding: 10rpx;
-  line-height: 1;
-}
-
-.nav-title {
-  font-size: 34rpx;
-  font-weight: bold;
-  color: #333;
-}
-
-.placeholder {
-  width: 70rpx;
-}
-
-/* 话题选择区域 */
-.topic-section {
-  padding: 30rpx;
-  border-bottom: 1rpx solid #f0f0f0;
-}
-
-.topic-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.topic-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
-}
-
-.topic-hint {
-  display: flex;
-  align-items: center;
-  font-size: 24rpx;
-  color: #b0dfbd;
-}
-
-.arrow {
-  margin-left: 10rpx;
-  transition: transform 0.3s;
-}
-
-.arrow.expanded {
-  transform: rotate(180deg);
-}
-
-.topic-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20rpx;
-  margin-top: 20rpx;
-}
-
-.topic-tag {
-  display: flex;
-  align-items: center;
-  padding: 16rpx 28rpx;
-  background-color: #f5f5f5;
-  border-radius: 30rpx;
-  font-size: 28rpx;
-  color: #666;
-}
-
-.topic-tag.active {
-  background-color: #E8F5E9;
-  color: #4CAF50;
-}
-
-.topic-icon {
-  margin-right: 6rpx;
-}
-
-.selected-topic {
-  margin-top: 20rpx;
-}
-
-.selected-topic .topic-tag {
-  display: inline-flex;
-}
-
-.remove-btn {
-  margin-left: 10rpx;
-  font-size: 28rpx;
-  color: #999;
-}
-
-/* 内容输入区域 */
-.content-section {
-  padding: 30rpx;
-  min-height: 300rpx;
-}
-
-.content-input {
-  width: 100%;
-  min-height: 200rpx;
-  font-size: 30rpx;
-  color: #333;
-  line-height: 1.6;
-}
-
-.word-count {
-  text-align: right;
-  font-size: 24rpx;
-  color: #999;
-  margin-top: 20rpx;
-}
-
-/* 图片上传区域 */
-.image-section {
-  padding: 0 30rpx 30rpx;
-}
-
-.image-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20rpx;
-}
-
-.image-item {
-  position: relative;
-  width: 200rpx;
-  height: 200rpx;
-}
-
-.image-item image {
-  width: 100%;
-  height: 100%;
-  border-radius: 12rpx;
-}
-
-.image-item .delete-btn {
-  position: absolute;
-  top: -15rpx;
-  right: -15rpx;
-  width: 40rpx;
-  height: 40rpx;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28rpx;
-}
-
-.add-image-btn {
-  width: 200rpx;
-  height: 200rpx;
-  background-color: #f5f5f5;
-  border-radius: 12rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.add-icon {
-  font-size: 60rpx;
-  color: #ccc;
-}
-
-.image-tip {
-  font-size: 24rpx;
-  color: #999;
-  margin-top: 20rpx;
-}
-
-/* 商品信息区域 */
-.product-section,
-.vote-section {
-  padding: 30rpx;
-  border-top: 16rpx solid #f5f5f5;
-}
-
-.section-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 30rpx;
-}
-
-.form-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 30rpx;
-}
-
-.label {
-  width: 140rpx;
-  font-size: 28rpx;
-  color: #666;
-}
-
-.price-input-wrapper {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  background-color: #f5f5f5;
-  border-radius: 12rpx;
-  padding: 0 20rpx;
-}
-
-.price-symbol {
-  font-size: 32rpx;
-  color: #ff6b00;
-  margin-right: 10rpx;
-}
-
-.price-input {
-  flex: 1;
-  height: 80rpx;
-  font-size: 32rpx;
-  color: #ff6b00;
-}
-
-.trade-options {
-  flex: 1;
-  display: flex;
-  gap: 20rpx;
-}
-
-.trade-option {
-  padding: 16rpx 24rpx;
-  background-color: #f5f5f5;
-  border-radius: 12rpx;
-  font-size: 26rpx;
-  color: #666;
-}
-
-.trade-option.active {
-  background-color: #E8F5E9;
-  color: #4CAF50;
-}
-
-/* 投票选项 */
-.vote-option-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.vote-input {
-  flex: 1;
-  height: 80rpx;
-  background-color: #f5f5f5;
-  border-radius: 12rpx;
-  padding: 0 20rpx;
-  font-size: 28rpx;
-}
-
-.delete-option {
-  width: 60rpx;
-  text-align: center;
-  font-size: 36rpx;
-  color: #999;
-}
-
-.add-option-btn {
-  padding: 20rpx;
-  text-align: center;
-  color: #4CAF50;
-  font-size: 28rpx;
-}
-
-/* 更多设置 */
-.more-settings {
-  padding: 30rpx;
-  border-top: 16rpx solid #f5f5f5;
-}
-
-.setting-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20rpx 0;
-}
-
-.setting-label {
-  font-size: 30rpx;
-  color: #333;
-}
-
-.switch {
-  width: 100rpx;
-  height: 56rpx;
-  background-color: #e0e0e0;
-  border-radius: 28rpx;
-  padding: 6rpx;
-  transition: background-color 0.3s;
-}
-
-.switch.active {
-  background-color: #4CAF50;
-}
-
-.switch-dot {
-  width: 44rpx;
-  height: 44rpx;
-  background-color: #fff;
-  border-radius: 50%;
-  transition: transform 0.3s;
-}
-
-.switch.active .switch-dot {
-  transform: translateX(44rpx);
-}
-
-/* 底部发布按钮 */
-.bottom-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 20rpx 30rpx;
-  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
-  background-color: #fff;
-  border-top: 1rpx solid #eee;
-}
-
-.publish-btn {
-  height: 90rpx;
-  background: linear-gradient(135deg, #b0dfbd, #bdeeca);
-  color: #fff;
-  font-size: 32rpx;
-  font-weight: bold;
-  border-radius: 45rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.publish-btn.disabled {
-  background: #ccc;
-  pointer-events: none; /* 禁用点击 */
-}
+.nav-header { display:flex; align-items:center; justify-content:space-between; padding:24rpx 28rpx; margin-bottom:18rpx; position:sticky; top:12rpx; backdrop-filter:blur(24rpx); -webkit-backdrop-filter:blur(24rpx); z-index:100; }
+.close-btn { font-size:50rpx; color:#222220; padding:10rpx; line-height:1; }
+.nav-title { font-size:34rpx; font-weight:bold; color:#171717; }
+.placeholder { width:70rpx; }
+.topic-section,.content-section,.ai-section,.image-section,.product-section,.vote-section,.more-settings { padding:28rpx; margin-bottom:18rpx; }
+.topic-header,.ai-header,.setting-item,.form-item { display:flex; justify-content:space-between; align-items:center; }
+.topic-title,.section-title,.setting-label,.ai-title { font-size:32rpx; font-weight:bold; color:#171717; }
+.topic-hint,.ai-subtitle,.word-count,.image-tip { font-size:24rpx; color:#8d8d87; }
+.topic-list,.tag-list,.image-list,.trade-options { display:flex; flex-wrap:wrap; gap:16rpx; }
+.topic-list { margin-top:20rpx; }
+.topic-tag,.trade-option,.ai-tag,.add-option-btn { display:flex; align-items:center; justify-content:center; padding:16rpx 24rpx; background-color:rgba(17,17,17,.04); border-radius:999rpx; font-size:26rpx; color:#666660; border:1rpx solid rgba(17,17,17,.08); }
+.topic-tag.active,.trade-option.active,.ai-tag.active { background:repeating-linear-gradient(135deg, rgba(255,255,255,.14) 0, rgba(255,255,255,.14) 2rpx, transparent 2rpx, transparent 18rpx), #171717; color:#fff; border-color:#171717; }
+.topic-icon { margin-right:6rpx; }
+.selected-topic { margin-top:20rpx; }
+.selected-topic .topic-tag { display:inline-flex; }
+.remove-btn { margin-left:10rpx; font-size:28rpx; color:inherit; }
+.title-input,.content-input,.price-input-wrapper,.vote-input { width:100%; background:rgba(17,17,17,.035); border:1rpx solid rgba(17,17,17,.08); border-radius:20rpx; color:#222220; }
+.title-input { height:84rpx; padding:0 22rpx; margin-bottom:18rpx; font-size:30rpx; }
+.content-input { min-height:240rpx; padding:22rpx; font-size:30rpx; line-height:1.7; }
+.word-count { text-align:right; margin-top:16rpx; }
+.ai-btn,.small-btn,.publish-btn { margin:0; border:none; color:#fff; background:repeating-linear-gradient(135deg, rgba(255,255,255,.14) 0, rgba(255,255,255,.14) 2rpx, transparent 2rpx, transparent 18rpx), linear-gradient(135deg, #1c1c1b 0%, #454540 100%); box-shadow:0 16rpx 32rpx rgba(17,17,17,.16); }
+.ai-btn { min-width:180rpx; height:68rpx; border-radius:999rpx; font-size:24rpx; line-height:68rpx; }
+.small-btn { align-self:flex-start; height:52rpx; padding:0 22rpx; border-radius:999rpx; font-size:22rpx; line-height:52rpx; }
+.ai-btn[disabled] { background:rgba(17,17,17,.18); box-shadow:none; }
+.ai-result { margin-top:22rpx; }
+.ai-result-item { padding:20rpx 0; border-top:1rpx solid rgba(17,17,17,.08); }
+.ai-label { display:block; margin-bottom:10rpx; font-size:24rpx; color:#575753; font-weight:bold; }
+.ai-value { display:block; margin-bottom:14rpx; font-size:26rpx; color:#252523; line-height:1.6; word-break:break-all; }
+.image-item { position:relative; width:200rpx; height:200rpx; }
+.image-item image,.add-image-btn { width:100%; height:100%; border-radius:20rpx; border:1rpx solid rgba(17,17,17,.08); }
+.image-item image { background:#ececea; }
+.image-item .delete-btn { position:absolute; top:-15rpx; right:-15rpx; width:40rpx; height:40rpx; background-color:rgba(17,17,17,.8); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28rpx; }
+.add-image-btn { background:rgba(17,17,17,.03); display:flex; align-items:center; justify-content:center; }
+.add-icon { font-size:60rpx; color:#8d8d87; }
+.label { width:140rpx; font-size:28rpx; color:#666660; }
+.price-input-wrapper { flex:1; display:flex; align-items:center; padding:0 20rpx; }
+.price-symbol,.price-input { font-size:32rpx; color:#181817; }
+.price-symbol { margin-right:10rpx; }
+.price-input { flex:1; height:80rpx; background:transparent; }
+.trade-options { flex:1; }
+.vote-option-item { display:flex; align-items:center; margin-bottom:20rpx; }
+.vote-input { flex:1; height:80rpx; padding:0 20rpx; font-size:28rpx; }
+.delete-option { width:60rpx; text-align:center; font-size:36rpx; color:#8d8d87; }
+.add-option-btn { margin-top:10rpx; }
+.switch { width:100rpx; height:56rpx; background-color:rgba(17,17,17,.1); border-radius:28rpx; padding:6rpx; transition:background-color .3s; }
+.switch.active { background-color:#171717; }
+.switch-dot { width:44rpx; height:44rpx; background-color:#fff; border-radius:50%; transition:transform .3s; }
+.switch.active .switch-dot { transform:translateX(44rpx); }
+.bottom-bar { position:fixed; bottom:0; left:0; right:0; padding:18rpx 24rpx; padding-bottom:calc(18rpx + env(safe-area-inset-bottom)); background:rgba(243,243,241,.84); backdrop-filter:blur(22rpx); -webkit-backdrop-filter:blur(22rpx); border-top:1rpx solid rgba(17,17,17,.08); }
+.publish-btn { height:92rpx; font-size:32rpx; font-weight:bold; border-radius:999rpx; display:flex; align-items:center; justify-content:center; }
+.publish-btn.disabled { background:rgba(17,17,17,.18); pointer-events:none; box-shadow:none; }
 </style>

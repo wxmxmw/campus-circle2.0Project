@@ -22,7 +22,7 @@
         <text class="label">头像</text>
         <view class="right">
           <image 
-            :src="form.avatarUrl || '../../static/default-avatar.png'" 
+            :src="avatarPreviewUrl"
             class="avatar-preview" 
             mode="aspectFill"
           />
@@ -54,10 +54,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api/user'
 import { commonApi } from '@/api/common'
+import { toAbsoluteUrl } from '@/utils/api'
 
 const userStore = useUserStore()
 const loading = ref(false)
@@ -69,6 +70,8 @@ const form = reactive({
   school: '',
   bio: ''
 })
+
+const avatarPreviewUrl = computed(() => toAbsoluteUrl(form.avatarUrl, '/static/default-avatar.png'))
 
 onMounted(() => {
   // 回显当前数据
@@ -135,6 +138,7 @@ const handleSave = async () => {
     console.log('【保存响应】', res)  
       
     if (res.code === 200) {  
+      userStore.updateUserInfo(res.data || payload)
       uni.showToast({ title: '保存成功' })  
       setTimeout(() => uni.navigateBack(), 1000)  
     }  
@@ -202,6 +206,12 @@ const handleSave = async () => {
 
 /* --- 表单样式 --- */
 .form-list { background: #fff; padding: 0 30rpx; }
+.form-list {
+  margin: 0 20rpx;
+  border-radius: 24rpx;
+  border: 1rpx solid rgba(17,17,17,0.06);
+  box-shadow: 0 12rpx 30rpx rgba(17,17,17,0.06);
+}
 .form-item {
   display: flex; justify-content: space-between; align-items: center;
   padding: 30rpx 0; border-bottom: 1rpx solid #eee;
@@ -215,7 +225,7 @@ const handleSave = async () => {
 .arrow { color: #ccc; }
 
 .save-btn {
-  margin: 60rpx 30rpx; background: #52C41A; color: #fff; 
+  margin: 60rpx 30rpx; background: #2f2f2f; color: #fff; 
   border-radius: 40rpx; font-size: 32rpx;
 }
 .save-btn:active { opacity: 0.9; }

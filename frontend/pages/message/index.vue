@@ -1,35 +1,33 @@
 <template>
   <view class="message-page">
-    <!-- 顶部标题 -->
     <view class="header">
-      <text class="title">消息</text>
+      <text class="title">Messages</text>
+      <text class="subtitle">Chat and activity in one place.</text>
     </view>
 
-    <!-- Tab 切换 -->
     <view class="tab-bar">
-      <view 
-        class="tab-item" 
+      <view
+        class="tab-item"
         :class="{ active: currentTab === 'chat' }"
         @click="switchTab('chat')"
       >
-        <text>私信</text>
+        <text>Chat</text>
         <view v-if="unreadChat > 0" class="badge">{{ unreadChat }}</view>
       </view>
-      <view 
-        class="tab-item" 
+      <view
+        class="tab-item"
         :class="{ active: currentTab === 'notification' }"
         @click="switchTab('notification')"
       >
-        <text>赞评</text>
+        <text>Activity</text>
         <view v-if="unreadNotify > 0" class="badge">{{ unreadNotify }}</view>
       </view>
     </view>
 
-    <!-- 私信列表 -->
     <view v-if="currentTab === 'chat'" class="message-list">
-      <view 
-        v-for="item in chatList" 
-        :key="item.id" 
+      <view
+        v-for="item in chatList"
+        :key="item.id"
         class="message-card"
         @click="goToChat(item)"
       >
@@ -38,81 +36,72 @@
           <text class="username">{{ item.username }}</text>
           <text class="content">{{ item.lastMessage }}</text>
         </view>
-        <!-- 右侧：时间在上，未读在下 -->
         <view class="message-right">
           <text class="time">{{ item.time }}</text>
           <view v-if="item.unread > 0" class="unread-dot">{{ item.unread }}</view>
         </view>
       </view>
-      
+
       <view v-if="chatList.length === 0" class="empty-tip">
-        暂无私信消息
+        No private messages yet.
       </view>
     </view>
 
-    <!-- 赞评列表 -->
     <view v-if="currentTab === 'notification'" class="message-list">
-      <view 
-        v-for="item in notifyList" 
-        :key="item.id" 
+      <view
+        v-for="item in notifyList"
+        :key="item.id"
         class="notify-card"
         :class="{ unread: !item.isRead }"
         @click="goToPostDetail(item)"
       >
-        <!-- 未读小红点 -->
         <view v-if="!item.isRead" class="notify-unread-dot"></view>
-        
+
         <image class="avatar" :src="item.avatar" mode="aspectFill"></image>
         <view class="notify-info">
           <view class="info-header">
             <text class="username">{{ item.username }}</text>
             <text class="notify-type">{{ item.typeText }} {{ item.time }}</text>
           </view>
-          
-          <!-- 评论内容（如果是评论类型） -->
-          <text v-if="(item.type === 'comment' || item.type === 'reply') && item.commentContent" class="comment-text">
+
+          <text
+            v-if="(item.type === 'comment' || item.type === 'reply') && item.commentContent"
+            class="comment-text"
+          >
             {{ item.commentContent }}
           </text>
-          
-          <!-- 引用的帖子/评论内容 -->
+
           <view v-if="item.quote" class="quote-content">
-            <text class="quote-label">{{ item.quoteLabel || '原文' }}：</text>
+            <text class="quote-label">{{ item.quoteLabel || 'Quote' }}:</text>
             <text>{{ item.quote }}</text>
           </view>
-          
-          <!-- 只有评论类型才显示回复按钮 -->
-          <view 
-            v-if="item.type === 'comment' || item.type === 'reply'" 
-            class="reply-btn" 
+
+          <view
+            v-if="item.type === 'comment' || item.type === 'reply'"
+            class="reply-btn"
             @click.stop="handleReply(item)"
           >
-            回复
+            Reply
           </view>
         </view>
-        
-        <!-- 右侧指示箭头 -->
-        <text class="arrow-icon">›</text>
+
+        <text class="arrow-icon">&gt;</text>
       </view>
-      
+
       <view v-if="notifyList.length === 0" class="empty-tip">
-        暂无赞评消息
+        No activity yet.
       </view>
     </view>
 
-    <!-- 底部占位 -->
     <view class="bottom-space"></view>
 
-    <!-- 底部导航栏 -->
-    <TabBar 
-      :current-tab="'message'"
-      @tab-change="handleTabChange"
-    />
+    <TabBar :current-tab="'message'" @tab-change="handleTabChange" />
   </view>
 </template>
 
 <script>
-import TabBar from '@/components/TabBar.vue';
-import { getChatList, getNotifyList, markChatAsRead, markNotifyAsRead } from '../../api/message.js';
+import TabBar from '@/components/TabBar.vue'
+import { getChatList, getNotifyList, markChatAsRead, markNotifyAsRead } from '../../api/message.js'
 
 export default {
   components: {
@@ -125,404 +114,383 @@ export default {
       notifyList: [],
       unreadChat: 0,
       unreadNotify: 0
-    };
+    }
   },
-  
+
   onLoad() {
-    this.initData();
+    this.syncPageTitle('Messages')
+    this.initData()
   },
-  
+
   onShow() {
-    // 每次显示页面时刷新数据
-    this.fetchChatList();
-    this.fetchNotifyList();
+    this.syncPageTitle('Messages')
+    this.fetchChatList()
+    this.fetchNotifyList()
   },
-  
+
   methods: {
+    syncPageTitle(title) {
+      uni.setNavigationBarTitle({
+        title
+      })
+      if (typeof document !== 'undefined') {
+        document.title = title
+      }
+    },
+
     async initData() {
-      await Promise.all([
-        this.fetchChatList(),
-        this.fetchNotifyList()
-      ]);
+      await Promise.all([this.fetchChatList(), this.fetchNotifyList()])
     },
-    
-    async fetchChatList() {  
-      try {  
-        const res = await getChatList();  
-        if (res.code === 200) {  
-          // 按用户ID去重，保留每个用户的最新对话  
-          const uniqueChats = new Map()  
-          res.data.list.forEach(chat => {  
-            if (!uniqueChats.has(chat.userId)) {  
-              uniqueChats.set(chat.userId, chat)  
-            }  
-          })  
-          this.chatList = Array.from(uniqueChats.values())  
-          this.unreadChat = res.data.unreadCount;  
-        }  
-      } catch (error) {  
-        console.error('获取私信列表失败:', error);  
-      }  
-    },
-    
-    async fetchNotifyList() {
+
+    async fetchChatList() {
       try {
-        const res = await getNotifyList();
+        const res = await getChatList()
         if (res.code === 200) {
-          this.notifyList = res.data.list;
-          this.unreadNotify = res.data.unreadCount;
+          const uniqueChats = new Map()
+          ;(res.data.list || []).forEach((chat) => {
+            if (!uniqueChats.has(chat.userId)) {
+              uniqueChats.set(chat.userId, chat)
+            }
+          })
+          this.chatList = Array.from(uniqueChats.values())
+          this.unreadChat = res.data.unreadCount || 0
         }
       } catch (error) {
-        console.error('获取赞评列表失败:', error);
+        console.error('Failed to fetch chat list:', error)
       }
     },
-    
-    // 更新未读数
+
+    async fetchNotifyList() {
+      try {
+        const res = await getNotifyList()
+        if (res.code === 200) {
+          this.notifyList = res.data.list || []
+          this.unreadNotify = res.data.unreadCount || 0
+        }
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error)
+      }
+    },
+
     updateUnreadCounts() {
-      this.unreadChat = this.chatList.reduce((sum, item) => sum + (item.unread || 0), 0);
-      this.unreadNotify = this.notifyList.filter(item => !item.isRead).length;
+      this.unreadChat = this.chatList.reduce((sum, item) => sum + (item.unread || 0), 0)
+      this.unreadNotify = this.notifyList.filter((item) => !item.isRead).length
     },
-    
+
     switchTab(tab) {
-      this.currentTab = tab;
+      this.currentTab = tab
     },
-    
-    // 进入聊天并标记已读
+
     async goToChat(item) {
-      // 立即更新本地状态
       if (item.unread > 0) {
-        item.unread = 0;
-        this.updateUnreadCounts();
-        
-        // 调用API标记已读
+        item.unread = 0
+        this.updateUnreadCounts()
         try {
-          await markChatAsRead(item.id);
+          await markChatAsRead(item.id)
         } catch (error) {
-          console.error('标记已读失败:', error);
+          console.error('Failed to mark chat as read:', error)
         }
       }
-      
-      console.log('进入聊天:', item.username);
-      // 跳转到聊天页面
-      uni.navigateTo({ url: `/pages/chat/detail?userId=${item.userId}` });
+
+      uni.navigateTo({
+        url: `/pages/chat/detail?userId=${item.userId}`
+      })
     },
-    
-    // 跳转到帖子详情并标记已读
+
     async goToPostDetail(item) {
-      // 立即更新本地状态
       if (!item.isRead) {
-        item.isRead = true;
-        this.updateUnreadCounts();
-        
-        // 调用API标记已读
+        item.isRead = true
+        this.updateUnreadCounts()
         try {
-          await markNotifyAsRead(item.id);
+          await markNotifyAsRead(item.id)
         } catch (error) {
-          console.error('标记已读失败:', error);
+          console.error('Failed to mark notification as read:', error)
         }
       }
-      
+
       if (item.postId) {
-        uni.navigateTo({ 
-          url: `/pages/post/detail?id=${item.postId}` 
-        });
+        uni.navigateTo({
+          url: `/pages/post/detail?id=${item.postId}`
+        })
       }
     },
-    
-    // 回复评论并标记已读
+
     async handleReply(item) {
-      // 立即更新本地状态
       if (!item.isRead) {
-        item.isRead = true;
-        this.updateUnreadCounts();
-        
-        // 调用API标记已读
+        item.isRead = true
+        this.updateUnreadCounts()
         try {
-          await markNotifyAsRead(item.id);
+          await markNotifyAsRead(item.id)
         } catch (error) {
-          console.error('标记已读失败:', error);
+          console.error('Failed to mark notification as read:', error)
         }
       }
-      
-      // 跳转到帖子详情页，并传递需要回复的评论信息
-      if (item.postId) {
-        const params = {
-          id: item.postId
-        };
-        
-        // 如果是回复评论，传递评论ID
-        if (item.commentId) {
-          params.replyCommentId = item.commentId;
-          params.replyUsername = item.username;
-        }
-        
-        const queryString = Object.keys(params)
-          .map(key => `${key}=${encodeURIComponent(params[key])}`)
-          .join('&');
-        
-        uni.navigateTo({ 
-          url: `/pages/post/detail?${queryString}` 
-        });
+
+      if (!item.postId) {
+        return
       }
+
+      const params = {
+        id: item.postId
+      }
+
+      if (item.commentId) {
+        params.replyCommentId = item.commentId
+        params.replyUsername = item.username
+      }
+
+      const queryString = Object.keys(params)
+        .map((key) => `${key}=${encodeURIComponent(params[key])}`)
+        .join('&')
+
+      uni.navigateTo({
+        url: `/pages/post/detail?${queryString}`
+      })
     },
-    
+
     handleTabChange(tabId) {
       if (tabId !== 'message') {
-        console.log('切换到:', tabId);
+        console.log('Switch tab:', tabId)
       }
     }
   }
-};
+}
 </script>
 
 <style scoped>
 .message-page {
   min-height: 100vh;
-  background-color: #f5f5f5;
   padding-bottom: 150rpx;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.96), rgba(243, 243, 243, 0.92) 44%, rgba(234, 234, 234, 0.94) 100%),
+    linear-gradient(180deg, #f8f8f8 0%, #eeeeee 100%);
 }
 
-/* 顶部标题 */
 .header {
-  padding: 30rpx;
-  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+  padding: 34rpx 30rpx 28rpx;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(245, 245, 245, 0.72));
+  border-bottom: 1rpx solid rgba(17, 17, 17, 0.06);
 }
 
 .title {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #333;
+  display: block;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #111111;
 }
 
-/* Tab 切换栏 */
+.subtitle {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: #7a7a7a;
+}
+
 .tab-bar {
   display: flex;
-  background-color: transparent;
-  padding: 20rpx 30rpx;
-  border-bottom: 1rpx solid #eee;
+  gap: 44rpx;
+  padding: 18rpx 30rpx 8rpx;
 }
 
 .tab-item {
   position: relative;
-  margin-right: 60rpx;
-  padding: 10rpx 0;
-  font-size: 30rpx;
-  color: #666;
+  padding: 10rpx 0 14rpx;
+  font-size: 28rpx;
+  color: #777777;
 }
 
 .tab-item.active {
-  color: #4CAF50;
-  font-weight: bold;
+  color: #111111;
+  font-weight: 600;
 }
 
 .tab-item.active::after {
   content: '';
   position: absolute;
-  bottom: 0;
   left: 50%;
+  bottom: 0;
   transform: translateX(-50%);
-  width: 40rpx;
-  height: 6rpx;
-  background-color: #4CAF50;
-  border-radius: 3rpx;
+  width: 44rpx;
+  height: 4rpx;
+  border-radius: 999rpx;
+  background: #111111;
 }
 
 .badge {
   position: absolute;
-  top: -10rpx;
-  right: -30rpx;
-  min-width: 32rpx;
-  height: 32rpx;
+  top: -8rpx;
+  right: -28rpx;
+  min-width: 34rpx;
+  height: 34rpx;
   padding: 0 8rpx;
-  background-color: #ff4d4f;
-  color: #fff;
+  border-radius: 999rpx;
+  background: #111111;
+  color: #ffffff;
   font-size: 20rpx;
-  border-radius: 16rpx;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* 消息列表 */
 .message-list {
-  padding: 20rpx 30rpx;
+  padding: 18rpx 24rpx;
 }
 
-/* 私信卡片 */
-.message-card {
+.message-card,
+.notify-card {
   display: flex;
   align-items: center;
-  padding: 30rpx;
-  background-color: #fff;
-  border-radius: 20rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  padding: 26rpx;
+  margin-bottom: 18rpx;
+  border-radius: 26rpx;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1rpx solid rgba(17, 17, 17, 0.06);
+  box-shadow: 0 12rpx 30rpx rgba(17, 17, 17, 0.05);
+}
+
+.notify-card {
+  position: relative;
+  align-items: flex-start;
+  padding-left: 36rpx;
+}
+
+.notify-card.unread {
+  background: rgba(255, 255, 255, 0.94);
 }
 
 .avatar {
-  width: 100rpx;
-  height: 100rpx;
-  border-radius: 50%;
+  width: 96rpx;
+  height: 96rpx;
   margin-right: 20rpx;
-  background-color: #e8f5e9;
+  border-radius: 50%;
+  background: #ededed;
   flex-shrink: 0;
 }
 
-.message-info {
+.message-info,
+.notify-info {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
 
 .username {
-  font-size: 30rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 10rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #111111;
 }
 
-.message-info .content {
-  font-size: 26rpx;
-  color: #666;
+.content,
+.notify-type,
+.quote-label {
+  color: #7b7b7b;
+}
+
+.content {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-/* 右侧区域：时间在上，未读在下 */
 .message-right {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: space-between;
-  height: 100rpx;
-  margin-left: 20rpx;
-  flex-shrink: 0;
+  min-height: 96rpx;
+  margin-left: 14rpx;
 }
 
-.message-right .time {
-  font-size: 24rpx;
-  color: #999;
+.time {
+  font-size: 22rpx;
+  color: #8f8f8f;
+}
+
+.unread-dot,
+.notify-unread-dot {
+  background: #111111;
+  color: #ffffff;
 }
 
 .unread-dot {
   min-width: 36rpx;
   height: 36rpx;
   padding: 0 10rpx;
-  background-color: #ff4d4f;
-  color: #fff;
-  font-size: 22rpx;
-  border-radius: 18rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* 赞评卡片 */
-.notify-card {
-  display: flex;
-  padding: 30rpx;
-  padding-left: 40rpx;
-  background-color: #fff;
-  border-radius: 20rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
-  position: relative;
-}
-
-/* 未读状态的卡片 */
-.notify-card.unread {
-  background-color: #fafffe;
-}
-
-/* 赞评未读小红点 */
 .notify-unread-dot {
   position: absolute;
-  top: 50%;
-  left: 15rpx;
-  transform: translateY(-50%);
-  width: 16rpx;
-  height: 16rpx;
-  background-color: #ff4d4f;
+  left: 14rpx;
+  top: 36rpx;
+  width: 12rpx;
+  height: 12rpx;
   border-radius: 50%;
-}
-
-.notify-info {
-  flex: 1;
-  overflow: hidden;
 }
 
 .info-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12rpx;
   margin-bottom: 10rpx;
 }
 
 .notify-type {
-  font-size: 24rpx;
-  color: #999;
+  font-size: 22rpx;
 }
 
-/* 评论内容 */
 .comment-text {
-  font-size: 28rpx;
-  color: #333;
-  line-height: 1.5;
-  margin-bottom: 15rpx;
   display: block;
-}
-
-/* 引用内容 */
-.quote-content {
-  margin-top: 10rpx;
-  padding: 20rpx;
-  background-color: #f5f5f5;
-  border-radius: 10rpx;
+  margin-bottom: 12rpx;
   font-size: 26rpx;
-  color: #666;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
+  line-height: 1.6;
+  color: #222222;
 }
 
-.quote-label {
-  color: #999;
+.quote-content {
+  margin-top: 8rpx;
+  padding: 16rpx 18rpx;
+  border-radius: 16rpx;
+  background: rgba(17, 17, 17, 0.04);
   font-size: 24rpx;
+  line-height: 1.6;
+  color: #666666;
 }
 
-/* 回复按钮 */
 .reply-btn {
-  display: inline-block;
-  margin-top: 15rpx;
-  padding: 10rpx 30rpx;
-  background-color: #e8f5e9;
-  color: #4CAF50;
-  font-size: 24rpx;
-  border-radius: 30rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 14rpx;
+  padding: 10rpx 24rpx;
+  border-radius: 999rpx;
+  background: #111111;
+  color: #ffffff;
+  font-size: 22rpx;
 }
 
-/* 右侧箭头 */
 .arrow-icon {
-  color: #ccc;
-  font-size: 32rpx;
   margin-left: 10rpx;
+  font-size: 28rpx;
+  color: #9a9a9a;
   align-self: center;
 }
 
-/* 空状态 */
 .empty-tip {
+  padding: 120rpx 0;
   text-align: center;
-  padding: 100rpx 0;
-  color: #999;
-  font-size: 28rpx;
+  font-size: 26rpx;
+  color: #8a8a8a;
 }
 
 .bottom-space {
-  height: 20rpx;
+  height: 18rpx;
 }
 </style>

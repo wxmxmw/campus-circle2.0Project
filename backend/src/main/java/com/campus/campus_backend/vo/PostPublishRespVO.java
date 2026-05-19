@@ -14,7 +14,9 @@ public class PostPublishRespVO {
     private String time;
     private Long topicId;
     private String topicName;
+    private String title;
     private String content;
+    private List<String> tags;
     private List<String> images;
     private Integer views;
     private Integer comments;

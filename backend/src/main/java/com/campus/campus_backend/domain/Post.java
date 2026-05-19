@@ -34,7 +34,7 @@ public class Post {
     @Column(length = 500)
     private String summary;
 
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "text")
     private String images;
 
     @Column(length = 255)

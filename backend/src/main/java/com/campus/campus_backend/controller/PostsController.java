@@ -33,9 +33,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.campus.campus_backend.repository.SysFileRepository;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,10 +121,17 @@ public class PostsController {
         p.setCategory(category);
         p.setIsAnonymous(Boolean.TRUE.equals(req.getIsAnonymous()));
         p.setContent(req.getContent());
+        p.setSummary(normalizeTitle(req.getTitle()));
+
+        List<String> postImages = req.getImages() == null ? new ArrayList<>() : new ArrayList<>(req.getImages());
+        List<String> postTags = normalizeTags(req.getTags());
 
         try {
-            if (req.getImages() != null) {
-                p.setImages(mapper.writeValueAsString(req.getImages()));
+            if (!postImages.isEmpty()) {
+                p.setImages(mapper.writeValueAsString(postImages));
+            }
+            if (!postTags.isEmpty()) {
+                p.setTags(mapper.writeValueAsString(postTags));
             }
             if (req.getProduct() != null) {
                 p.setProductInfo(mapper.writeValueAsString(req.getProduct()));
@@ -135,16 +144,36 @@ public class PostsController {
         p.setCommentCount(0);
         p = postRepository.save(p);
 
-        // 新增：更新相关文件的业务关联
-        if (req.getImages() != null && !req.getImages().isEmpty()) {
-            // 从URL中提取文件ID或通过URL查询文件记录
-            for (String imageUrl : req.getImages()) {
-                SysFile file = sysFileRepository.findByFileUrl(imageUrl);
-                if (file != null) {
-                    file.setBusinessId(p.getId());
-                    file.setBusinessType("post");
-                    sysFileRepository.save(file);
+        if (postImages.isEmpty()) {
+            List<SysFile> pendingFiles = sysFileRepository
+                    .findTop9ByUploaderIdAndBusinessTypeAndBusinessIdIsNullAndCreateTimeAfterOrderByCreateTimeDesc(
+                            user.getId(), "post", LocalDateTime.now().minusMinutes(10));
+            Collections.reverse(pendingFiles);
+            for (SysFile file : pendingFiles) {
+                if (file.getFileUrl() != null && !file.getFileUrl().isBlank()) {
+                    postImages.add(file.getFileUrl());
                 }
+            }
+            if (!postImages.isEmpty()) {
+                try {
+                    p.setImages(mapper.writeValueAsString(postImages));
+                    p = postRepository.save(p);
+                } catch (Exception ignore) {
+                }
+            }
+        }
+
+        // 新增：更新相关文件的业务关联
+        if (!postImages.isEmpty()) {
+            // 从URL中提取文件ID或通过URL查询文件记录
+            for (String imageUrl : postImages) {
+                SysFile file = sysFileRepository.findByFileUrl(imageUrl);
+                if (file == null) {
+                    continue;
+                }
+                file.setBusinessId(p.getId());
+                file.setBusinessType("post");
+                sysFileRepository.save(file);
             }
         }
 
@@ -170,11 +199,12 @@ public class PostsController {
         vo.setTime(p.getCreatedAt().atZone(ZoneId.of("Asia/Shanghai")).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
         vo.setTopicId(req.getTopicId());
         vo.setTopicName(req.getTopicName());
+        vo.setTitle(p.getSummary());
         vo.setContent(p.getContent());
+        vo.setTags(postTags);
 
         try {
-            List<String> images = req.getImages();
-            vo.setImages(images);
+            vo.setImages(postImages);
         } catch (Exception ignore) {
         }
 
@@ -320,14 +350,15 @@ public class PostsController {
             String tag = p.getCategory() != null ? p.getCategory().getName() : null;
             item.put("tag", tag);
             item.put("categoryId", p.getCategory() != null ? p.getCategory().getId() : null);
+            item.put("title", buildPostTitle(p));
             item.put("content", p.getContent());
+            item.put("tags", parseTags(p.getTags()));
 
             // 处理图片
             try {
                 List<String> images = new ArrayList<>();
                 if (p.getImages() != null && !p.getImages().isEmpty()) {
-                    images = mapper.readValue(p.getImages(), new TypeReference<List<String>>() {
-                    });
+                    images = parseImageUrls(p.getImages());
                 }
                 item.put("images", images);
             } catch (Exception ignore) {
@@ -764,14 +795,15 @@ public class PostsController {
         data.put("categoryId", p.getCategory() != null ? p.getCategory().getId() : null);
         String tag = p.getCategory() != null ? p.getCategory().getName() : null;
         data.put("tag", tag);
+        data.put("title", buildPostTitle(p));
         data.put("content", p.getContent());
+        data.put("tags", parseTags(p.getTags()));
 
         // 处理图片
         try {
             List<String> images = new ArrayList<>();
             if (p.getImages() != null && !p.getImages().isEmpty()) {
-                images = mapper.readValue(p.getImages(), new TypeReference<List<String>>() {
-                });
+                images = parseImageUrls(p.getImages());
             }
             data.put("images", images);
         } catch (Exception ignore) {
@@ -863,6 +895,70 @@ public class PostsController {
         return String.valueOf(v);
     }
 
+    private String normalizeTitle(String title) {
+        if (title == null || title.isBlank()) {
+            return null;
+        }
+        String value = title.trim();
+        return value.length() > 60 ? value.substring(0, 60) : value;
+    }
+
+    private String buildPostTitle(Post post) {
+        String title = post.getSummary();
+        if (title != null && !title.isBlank()) {
+            return title;
+        }
+        return "";
+    }
+
+    private List<String> normalizeTags(List<String> rawTags) {
+        if (rawTags == null || rawTags.isEmpty()) {
+            return List.of();
+        }
+        List<String> tags = new ArrayList<>();
+        for (String raw : rawTags) {
+            if (raw == null) {
+                continue;
+            }
+            String tag = raw.replace("#", "").trim();
+            if (!tag.isBlank() && !tags.contains(tag)) {
+                tags.add(tag.length() > 12 ? tag.substring(0, 12) : tag);
+            }
+            if (tags.size() >= 5) {
+                break;
+            }
+        }
+        return tags;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> parseTags(String rawTags) {
+        if (rawTags == null || rawTags.isBlank()) {
+            return List.of();
+        }
+        try {
+            Object value = mapper.readValue(rawTags, Object.class);
+            if (value instanceof List<?> list) {
+                return normalizeTags((List<String>) list.stream()
+                        .filter(String.class::isInstance)
+                        .map(String.class::cast)
+                        .toList());
+            }
+        } catch (Exception ignored) {
+        }
+        List<String> values = new ArrayList<>();
+        for (String piece : rawTags.split("[,，、\\s]+")) {
+            String tag = piece.replace("#", "").trim();
+            if (!tag.isBlank() && !values.contains(tag)) {
+                values.add(tag.length() > 12 ? tag.substring(0, 12) : tag);
+            }
+            if (values.size() >= 5) {
+                break;
+            }
+        }
+        return values;
+    }
+
     @PostMapping("/{id}/top")
     @Transactional
     public Result<Map<String, Boolean>> top(@AuthenticationPrincipal UserDetails principal,
@@ -948,5 +1044,43 @@ public class PostsController {
         data.put("isTop", false);
 
         return Result.ok(data);
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> parseImageUrls(String rawImages) {
+        if (rawImages == null || rawImages.isBlank()) {
+            return List.of();
+        }
+
+        Object value = rawImages;
+        for (int i = 0; i < 8; i++) {
+            if (value instanceof List<?> list) {
+                return list.stream()
+                        .filter(String.class::isInstance)
+                        .map(String.class::cast)
+                        .filter(url -> !url.isBlank())
+                        .toList();
+            }
+            if (!(value instanceof String text) || text.isBlank()) {
+                break;
+            }
+            try {
+                value = mapper.readValue(text, Object.class);
+            } catch (Exception ignored) {
+                break;
+            }
+        }
+
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("/api/uploads/[^\\\"\\\\\\s]+")
+                .matcher(rawImages);
+        List<String> urls = new ArrayList<>();
+        while (matcher.find()) {
+            String url = matcher.group();
+            if (!urls.contains(url)) {
+                urls.add(url);
+            }
+        }
+        return urls;
     }
 }

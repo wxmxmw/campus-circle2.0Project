@@ -205,7 +205,7 @@ const formatDate = (ts) => {
 /* 头部背景图 */
 .header-bg {
   height: 260rpx;
-  background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+  background: linear-gradient(120deg, #f1f1f1 0%, #d8d8d8 100%);
 }
 
 /* 资料卡片 */
@@ -268,14 +268,14 @@ const formatDate = (ts) => {
 
 .chat-style {
   background: #fff;
-  color: #52C41A;
-  border: 2rpx solid #52C41A;
+  color: #3f3f3f;
+  border: 2rpx solid #3f3f3f;
 }
 
 .follow-style {
-  background: #52C41A;
+  background: #3f3f3f;
   color: #fff;
-  border: 2rpx solid #52C41A;
+  border: 2rpx solid #3f3f3f;
 }
 .follow-style.is-followed {
   background: #f5f5f5;
@@ -288,8 +288,8 @@ const formatDate = (ts) => {
 .name { font-size: 40rpx; font-weight: bold; color: #333; }
 .school-row { margin-top: 10rpx; }
 .school-tag { 
-  font-size: 22rpx; color: #1890FF; background: #e6f7ff; 
-  padding: 4rpx 12rpx; border-radius: 6rpx; border: 1rpx solid #91d5ff;
+  font-size: 22rpx; color: #4d4d4d; background: #efefef; 
+  padding: 4rpx 12rpx; border-radius: 6rpx; border: 1rpx solid #d2d2d2;
 }
 .bio { margin-top: 16rpx; font-size: 28rpx; color: #666; line-height: 1.4; }
 

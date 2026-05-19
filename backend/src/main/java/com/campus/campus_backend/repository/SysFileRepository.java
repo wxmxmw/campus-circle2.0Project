@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -14,4 +15,8 @@ public interface SysFileRepository extends JpaRepository<SysFile, Long> {
 
     @Query("SELECT s FROM SysFile s WHERE s.fileUrl = :url")
     SysFile findByFileUrl(@Param("url") String url);
+
+    List<SysFile> findTop9ByUploaderIdAndBusinessTypeAndBusinessIdIsNullAndCreateTimeAfterOrderByCreateTimeDesc(
+            Long uploaderId, String businessType, LocalDateTime createTime);
+
 }
