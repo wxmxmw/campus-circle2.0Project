@@ -14,7 +14,7 @@ export const useUserStore = defineStore('user', () => {
   
   // 计算属性
   const isLoggedIn = computed(() => !!token.value)
-  const avatar = computed(() => toAbsoluteUrl(userInfo.value?.avatarUrl, '/static/default-avatar.png'))
+  const avatar = computed(() => toAbsoluteUrl(userInfo.value?.avatarUrl, '/static/logo.png'))
   const nickname = computed(() => userInfo.value?.nickname || '未登录用户')
   
   // [新增] 管理员判断逻辑

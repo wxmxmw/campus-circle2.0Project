@@ -115,12 +115,14 @@ import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { userApi } from '@/api/user'
 import { useUserStore } from '@/stores/user'
+import { toAbsoluteUrl } from '@/utils/api'
 
 const userInfo = ref(null)
 const userPosts = ref([])
 const userId = ref('')
 const loadingPosts = ref(false)
 const userStore = useUserStore()
+const getImageUrl = (url) => toAbsoluteUrl(url, '/static/logo.png')
 
 onLoad((options) => {
   if (options.id) {
@@ -136,7 +138,10 @@ const loadUserProfile = async () => {
   try {
     const res = await userApi.getUserProfile(userId.value)
     if (res.code === 200) {
-      userInfo.value = res.data
+      userInfo.value = {
+        ...res.data,
+        avatarUrl: getImageUrl(res.data?.avatarUrl)
+      }
     }
   } catch (e) {
     console.error('用户资料加载失败', e)
@@ -153,10 +158,14 @@ const loadUserPosts = async () => {
     
     if (res.code === 200) {
       // 兼容后端可能直接返回数组，或者返回 { list: [] } 的情况
+      const normalizePost = (post) => ({
+        ...post,
+        images: Array.isArray(post?.images) ? post.images.map(getImageUrl) : []
+      })
       if (Array.isArray(res.data)) {
-        userPosts.value = res.data
+        userPosts.value = res.data.map(normalizePost)
       } else if (res.data && Array.isArray(res.data.list)) {
-        userPosts.value = res.data.list
+        userPosts.value = res.data.list.map(normalizePost)
       } else {
         userPosts.value = []
       }

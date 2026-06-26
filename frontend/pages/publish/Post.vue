@@ -92,7 +92,7 @@
 
         <view class="ai-result-item">
           <text class="ai-label">润色正文</text>
-          <text class="ai-value">{{ aiSuggestion.polishedContent }}</text>
+          <view class="ai-value ai-content-value">{{ aiSuggestion.polishedContent }}</view>
           <button class="small-btn" @click="useAiContent">使用正文</button>
         </view>
 
@@ -427,6 +427,7 @@ export default {
 .ai-review-meta { display:block; margin-top:6rpx; font-size:22rpx; color:#595959; }
 .ai-label { display:block; margin-bottom:10rpx; font-size:24rpx; color:#575753; font-weight:bold; }
 .ai-value { display:block; margin-bottom:14rpx; font-size:26rpx; color:#252523; line-height:1.6; word-break:break-all; }
+.ai-content-value { white-space:pre-wrap; word-break:break-word; }
 .image-item { position:relative; width:200rpx; height:200rpx; }
 .image-item image,.add-image-btn { width:100%; height:100%; border-radius:20rpx; border:1rpx solid rgba(17,17,17,.08); }
 .image-item image { background:#ececea; }

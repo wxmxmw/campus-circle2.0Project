@@ -3,6 +3,7 @@ package com.campus.campus_backend.repository;
 import com.campus.campus_backend.domain.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReportRepository extends JpaRepository<Report, Long> {
@@ -13,4 +14,6 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
      * @return 举报列表
      */
     List<Report> findByStatusOrderByCreatedAtDesc(Short status);
+
+    List<Report> findByCreatedAtAfterOrderByCreatedAtDesc(LocalDateTime createdAt);
 }

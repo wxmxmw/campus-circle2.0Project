@@ -3,7 +3,7 @@ import { getApiBaseUrl } from '@/utils/api'
 let useMock = false
 
 const mockUrl = '/api'
-const timeout = 10000
+const timeout = 30000
 const tokenKey = 'token'
 
 if (useMock) {

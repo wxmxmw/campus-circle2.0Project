@@ -8,10 +8,37 @@ const normalizeOrigin = (origin) => {
   return origin.replace(/\/+$/, '')
 }
 
+const isH5 = typeof window !== 'undefined' && typeof window.location !== 'undefined'
+
+const getDeploymentBasePath = () => {
+  if (!isH5) {
+    return ''
+  }
+
+  const segments = window.location.pathname.split('/').filter(Boolean)
+  if (segments.length === 0) {
+    return ''
+  }
+
+  // H5 is deployed under /ccy/, /cy/, /lqy/, or /wxm/.
+  return `/${segments[0]}`
+}
+
+const getProductionBackendOrigin = () => {
+  if (!isH5) {
+    return DEFAULT_BACKEND_ORIGIN
+  }
+
+  return `${window.location.origin}${getDeploymentBasePath()}`
+}
+
 export const getBackendOrigin = () => {
   const customOrigin = uni.getStorageSync(DEV_BACKEND_ORIGIN_KEY)
   if (customOrigin) {
     return normalizeOrigin(customOrigin)
+  }
+  if (process.env.NODE_ENV === 'production') {
+    return normalizeOrigin(getProductionBackendOrigin())
   }
   return DEFAULT_BACKEND_ORIGIN
 }

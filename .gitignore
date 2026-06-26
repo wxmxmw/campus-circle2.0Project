@@ -8,6 +8,7 @@ backend/target/
 backend/data/
 backend/logs/
 backend/uploads/
+backend/scripts/out/
 backend/startup.log
 backend/startup.err
 
@@ -16,3 +17,9 @@ frontend/unpackage/
 
 # Local env / caches
 *.log
+data/
+logs/
+tmp/
+BOOT-INF/
+.codex-ppt/
+artifact-build-manifest.json

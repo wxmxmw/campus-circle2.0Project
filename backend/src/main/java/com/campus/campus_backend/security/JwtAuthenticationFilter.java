@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,21 +14,24 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
     private final StringRedisTemplate redisTemplate;
+    private final boolean redisEnabled;
 
     public JwtAuthenticationFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService,
-                                   StringRedisTemplate redisTemplate) {
+                                   Optional<StringRedisTemplate> redisTemplate,
+                                   @Value("${app.redis.enabled:false}") boolean redisEnabled) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
-        this.redisTemplate = redisTemplate;
+        this.redisTemplate = redisEnabled ? redisTemplate.orElse(null) : null;
+        this.redisEnabled = redisEnabled;
     }
 
     @Override
@@ -48,11 +53,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
             String token = header.substring(7);
             boolean isBlacklisted = false;
-            try {
-                String key = "BLACKLIST:JWT:" + token;
-                Boolean blacklisted = redisTemplate.hasKey(key);
-                isBlacklisted = Boolean.TRUE.equals(blacklisted);
-            } catch (Exception ignore) {
+            if (redisEnabled && redisTemplate != null) {
+                try {
+                    String key = "BLACKLIST:JWT:" + token;
+                    Boolean blacklisted = redisTemplate.hasKey(key);
+                    isBlacklisted = Boolean.TRUE.equals(blacklisted);
+                } catch (Exception ignore) {
+                }
             }
             if (!isBlacklisted && jwtUtil.validate(token)) {
                 String username = jwtUtil.getSubject(token);

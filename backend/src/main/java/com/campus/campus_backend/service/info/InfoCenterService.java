@@ -134,28 +134,49 @@ public class InfoCenterService {
         List<Long> subscribedIds = user == null ? List.of()
                 : noticeSubscriptionRepository.findByUserIdAndEnabledTrue(user.getId()).stream()
                         .map(item -> item.getSource().getId()).toList();
-        List<AggregatedNotice> all;
+        String normalizedCategory = category == null || category.isBlank() ? null : category.trim();
+        String normalizedKeyword = keyword == null || keyword.isBlank() ? null : keyword.trim();
+        org.springframework.data.domain.Page<AggregatedNotice> noticePage;
         if (user == null) {
             if (Boolean.TRUE.equals(onlySubscribed)) {
-                all = List.of();
+                noticePage = org.springframework.data.domain.Page.empty(pageable);
             } else {
-                all = aggregatedNoticeRepository.findPublicNotices("ONLINE", pageable).getContent();
+                noticePage = aggregatedNoticeRepository.searchPublicNotices("ONLINE", normalizedCategory, sourceId,
+                        normalizedKeyword, pageable);
             }
         } else if (Boolean.TRUE.equals(onlySubscribed) && !subscribedIds.isEmpty()) {
-            all = aggregatedNoticeRepository.findSubscribedAndOwnedVisibleNotices("ONLINE", subscribedIds, user.getId(), pageable).getContent();
+            List<AggregatedNotice> subscribedPage = aggregatedNoticeRepository
+                    .findSubscribedAndOwnedVisibleNotices("ONLINE", subscribedIds, user.getId(), pageable)
+                    .getContent()
+                    .stream()
+                    .filter(notice -> normalizedCategory == null || normalizedCategory.equalsIgnoreCase(notice.getCategory()))
+                    .filter(notice -> sourceId == null || Objects.equals(sourceId, notice.getSource().getId()))
+                    .filter(notice -> normalizedKeyword == null
+                            || containsIgnoreCase(notice.getTitle(), normalizedKeyword)
+                            || containsIgnoreCase(notice.getSummary(), normalizedKeyword)
+                            || containsIgnoreCase(notice.getContentSnapshot(), normalizedKeyword))
+                    .toList();
+            noticePage = new org.springframework.data.domain.PageImpl<>(subscribedPage, pageable, subscribedPage.size());
         } else {
-            all = aggregatedNoticeRepository.findVisibleNotices("ONLINE", user.getId(), pageable).getContent();
+            noticePage = aggregatedNoticeRepository.searchVisibleNotices("ONLINE", user.getId(), normalizedCategory,
+                    sourceId, normalizedKeyword, pageable);
         }
-        List<Map<String, Object>> filtered = all.stream()
-                .filter(notice -> category == null || category.isBlank() || category.equalsIgnoreCase(notice.getCategory()))
-                .filter(notice -> sourceId == null || Objects.equals(sourceId, notice.getSource().getId()))
-                .filter(notice -> keyword == null || keyword.isBlank()
-                        || containsIgnoreCase(notice.getTitle(), keyword)
-                        || containsIgnoreCase(notice.getSummary(), keyword)
-                        || containsIgnoreCase(notice.getContentSnapshot(), keyword))
+        List<Map<String, Object>> filtered = noticePage.getContent().stream()
                 .map(notice -> toNoticeMap(notice, user, subscribedIds))
                 .toList();
-        return Map.of("list", filtered, "page", page, "pageSize", pageSize, "hasMore", filtered.size() >= pageSize);
+        return Map.of(
+                "list", filtered,
+                "page", page,
+                "pageSize", pageSize,
+                "total", noticePage.getTotalElements(),
+                "hasMore", noticePage.hasNext());
+    }
+
+    public Map<String, Object> listNoticeCategories(User user) {
+        List<String> categories = user == null
+                ? aggregatedNoticeRepository.findPublicCategories("ONLINE")
+                : aggregatedNoticeRepository.findVisibleCategories("ONLINE", user.getId());
+        return Map.of("list", categories);
     }
 
     public Map<String, Object> getNoticeDetail(Long id, User user) {

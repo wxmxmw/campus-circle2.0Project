@@ -1,162 +1,118 @@
-# 校园圈子 2.0 项目协作说明
+# Campus Circle 2.0
 
-这个仓库是我们项目的整合开发仓库，包含前后端完整代码，方便组员各自在本地独立开发。
+本仓库是项目的前后端一体仓库，当前结构如下：
 
-目录结构：
+- `backend/`: Spring Boot 后端
+- `frontend/`: uni-app 前端
+- `DEPLOYMENT_GUIDE.md`: 服务器部署说明
+- `README.md`: 项目说明
 
-- `backend/`：Spring Boot 后端
-- `frontend/`：uni-app 前端
-- `ADDRESS_REFERENCE.md`：统一地址配置说明
-- `DEVELOPMENT_GUIDE.md`：多人协作开发建议
 
-## 1. 组员第一次接手时，推荐这样做
+## 当前开发模式
 
-如果你是第一次把项目拉到本地，建议按下面顺序操作：
+项目当前已切换为：
 
-1. 先启动后端
-2. 后端先使用默认本地数据库模式
-3. 后端启动成功后，再用 HBuilderX 运行前端
+- 后端默认连接远程 MySQL
+- 前端仍然默认请求本机后端：`http://localhost:8080/api`
 
-这样最省事，因为不依赖共享服务器，也不依赖共享远程数据库。
+当前后端默认激活的 profile 是：
 
-## 2. 本地开发前需要准备什么
+- `local-mysql`
 
-后端需要：
+对应配置文件：
 
-- JDK 21
+- `backend/src/main/resources/application.properties`
+- `backend/src/main/resources/application-local-mysql.properties`
+
+## 环境要求
+
+后端：
+
+- JDK 17
 - Maven 3.9+
-- 建议本机有 Redis，默认端口 `6379`
+- Redis（可选，默认 `localhost:6379`）
 
-前端需要：
+前端：
 
 - HBuilderX
 
-如果你想让后端连接本地 MySQL，还需要：
+## 后端启动
 
-- MySQL 8+
+### 1. 配置远程数据库密码
 
-## 3. 后端数据库怎么配置
-
-后端现在支持两种本地开发方式。
-
-### 方式 A：默认本地 H2 数据库
-
-这是目前最推荐的方式，也是默认方式。
-
-相关配置文件：
-
-- `backend/src/main/resources/application.properties`
-- `backend/src/main/resources/application-local.properties`
-
-当前关键配置：
-
-- 默认激活环境：`local`
-- 本地数据库文件：`backend/data/campus-circle.mv.db`
-- 本地上传目录：`backend/uploads`
-- 本地日志目录：`backend/logs`
-- H2 控制台：`http://localhost:8080/h2-console`
-
-启动命令：
+后端数据库密码不会写死在仓库里，启动前需要先设置环境变量：
 
 ```powershell
-cd backend
-mvn spring-boot:run
+$env:REMOTE_DB_PASSWORD="你的数据库密码"
 ```
 
-第一次启动会自动完成：
+### 2. 打包
 
-- 自动建表
-- 初始化默认分类
-- 初始化管理员账号
-
-默认管理员账号：
-
-- 用户名：`admin`
-- 密码：`admin123`
-
-### 方式 B：连接本地 MySQL
-
-如果你更习惯用 MySQL，可以切换到本地 MySQL 模式。
-
-相关配置文件：
-
-- `backend/src/main/resources/application-local-mysql.properties`
-
-建议步骤：
-
-1. 确保本机 MySQL 已安装并启动
-2. 准备一个本地可登录账号
-3. 启动时切换到 `local-mysql`
-
-示例命令：
+在 `backend/` 目录执行：
 
 ```powershell
-cd backend
-$env:SPRING_PROFILES_ACTIVE="local-mysql"
-$env:LOCAL_DB_URL="jdbc:mysql://localhost:3306/campus_circle?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8&createDatabaseIfNotExist=true"
-$env:LOCAL_DB_USERNAME="root"
-$env:LOCAL_DB_PASSWORD="你的MySQL密码"
-mvn spring-boot:run
+mvn clean package -DskipTests
 ```
 
-仓库里也有一个辅助 SQL：
+### 3. 启动
 
-- `backend/scripts/init-local-mysql.sql`
+继续在 `backend/` 目录执行：
 
-补充说明：
+```powershell
+java -jar target\campus-backend-0.0.1-SNAPSHOT.jar
+```
 
-- 本地 MySQL 模式下已经开启 `ddl-auto=update`
-- 也就是说空库第一次启动时，会自动按实体建表
-- 每个组员都可以用自己的本地 MySQL，不需要共享数据库
+说明：
 
-## 4. Redis 要不要配
+- 当前在 Windows 中文路径环境下，`mvn spring-boot:run` 可能出现主类加载失败
+- 因此目前推荐使用 `mvn clean package -DskipTests` + `java -jar` 方式启动
 
-Redis 主要用于：
+## 当前默认远程数据库
 
-- 在线状态
-- token 黑名单
+后端当前默认连接的是远程 MySQL：
 
-默认配置位置：
+- Host: `121.199.30.215`
+- Port: `3306`
+- Database: `campus_circle_wxm_db`
+- Username: `wxm`
+- Password: 通过 `REMOTE_DB_PASSWORD` 提供
 
-- `backend/src/main/resources/application-local.properties`
-- `backend/src/main/resources/application-local-mysql.properties`
+JPA 当前配置：
 
-默认地址：
+- `spring.jpa.hibernate.ddl-auto=update`
 
-- Host：`localhost`
-- Port：`6379`
+因此首次启动时会自动建表/更新表结构。
 
-如果本机没有 Redis，后端核心开发通常也还能继续，只是部分在线状态和黑名单能力会降级。
+## 如何确认后端启动成功
 
-## 5. 怎么确认后端启动成功
+后端启动后，建议检查：
 
-后端启动后，建议至少检查下面几个地址：
+1. Swagger UI: `http://localhost:8080/swagger-ui.html`
+2. 健康检查: `http://localhost:8080/actuator/health`
 
-1. Swagger 文档：`http://localhost:8080/swagger-ui.html`
-2. 健康检查：`http://localhost:8080/actuator/health`
-3. 如果你用 H2：`http://localhost:8080/h2-console`
+如果远程数据库连接成功，原本空的 `campus_circle_wxm_db` 会开始出现业务表。
 
-## 6. 前端怎么启动
+## 前端启动
 
-前端目录是：
+前端目录：
 
 - `frontend/`
 
-请用 HBuilderX 打开 `frontend/` 后运行。
+请使用 HBuilderX 打开 `frontend/` 后运行。
 
-前端现在默认请求本地后端：
+前端当前默认请求：
 
 ```text
 http://localhost:8080/api
 ```
 
-如果你是在电脑本机调试，一般不需要额外改地址。
+也就是说，前端本地联调时，需要先启动本机后端。
 
-## 7. 如果是真机调试，怎么改前端地址
+## 真机调试时修改后端地址
 
-如果你用手机真机调试，`localhost` 指向的是手机本机，不是你的电脑。
+如果使用手机真机调试，`localhost` 指向的是手机自身，不是电脑。
 
-这时要把前端的后端地址切到你电脑的局域网 IP，比如：
+这时需要把前端后端地址切到你电脑的局域网 IP，例如：
 
 ```js
 import { setDevBackendOrigin } from '@/utils/api'
@@ -170,37 +126,23 @@ import { clearDevBackendOrigin } from '@/utils/api'
 clearDevBackendOrigin()
 ```
 
-## 8. 现在统一过的地址都在哪里
+统一地址配置位置：
 
-### 统一接口基地址
+- `frontend/utils/api.js`
 
-定义位置：
+## 前端统一地址入口
+
+接口基础地址定义在：
 
 - `frontend/utils/api.js`
   - `DEFAULT_BACKEND_ORIGIN`
   - `getApiBaseUrl()`
 
-实际请求入口：
+请求封装在：
 
 - `frontend/utils/request.js`
-- `frontend/api/user.js`
 
-### 统一图片绝对地址
-
-定义位置：
-
-- `frontend/utils/api.js`
-  - `toAbsoluteUrl()`
-
-当前使用位置：
-
-- `frontend/components/PostCard.vue`
-- `frontend/pages/post/detail.vue`
-- `frontend/pages/errand/detail.vue`
-
-### 统一上传地址
-
-前端使用位置：
+上传入口在：
 
 - `frontend/utils/request.js`
   - `upload()`
@@ -208,35 +150,27 @@ clearDevBackendOrigin()
   - `uploadImage()`
   - `uploadBatchImages()`
 
-后端对应接口：
+后端上传接口对应：
 
 - `backend/src/main/java/com/campus/campus_backend/controller/CommonController.java`
 
-更详细的说明见：
+## 协作建议
 
-- `ADDRESS_REFERENCE.md`
+当前更适合这样协作：
 
-## 9. 我们现在推荐的协作方式
+1. 每位成员使用自己的独立远程数据库账号和数据库
+2. 接口字段变更时，前后端尽量在同一分支一起改
+3. 不要依赖某条测试数据的固定主键值
+4. 如果某功能依赖初始化数据，把初始化方式写进代码或文档
+5. 提交前说明数据库结构、接口和测试方式的变化
 
-因为我们没有共享数据库，也没有共享线上数据，所以推荐这样协作：
+## 部署准备建议
 
-1. 每个人都用自己的本地数据库
-2. 接口字段变化时，前后端尽量在同一个分支一起改
-3. 不要依赖“我本地这条数据的 id 正好是多少”
-4. 如果一个功能依赖初始化数据，要把初始化方式写进代码或文档
-5. 提交 PR 时，最好写清楚接口变化和测试方式
+部署前建议确保仓库内不包含以下本地产物：
 
-更详细的协作建议见：
+- 后端构建产物：`backend/target/`
+- 运行期目录：`backend/data/`、`backend/logs/`、`backend/uploads/`
+- 前端构建产物：`frontend/unpackage/`
+- 临时演示或调试产物
 
-- `DEVELOPMENT_GUIDE.md`
-
-## 10. 仓库结构
-
-```text
-campus_circle2.0/
-  backend/
-  frontend/
-  README.md
-  ADDRESS_REFERENCE.md
-  DEVELOPMENT_GUIDE.md
-```
+正式部署时请以 [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) 为准。

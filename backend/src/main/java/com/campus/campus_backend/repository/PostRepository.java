@@ -4,6 +4,7 @@ import com.campus.campus_backend.domain.Post;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -24,4 +25,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Page<Post> findPostsByUserId(@Param("userId") Long userId, Pageable pageable);
 
     List<Post> findByUserId(Long userId);
+
+    List<Post> findByCreatedAtAfterOrderByCreatedAtDesc(LocalDateTime createdAt);
 }

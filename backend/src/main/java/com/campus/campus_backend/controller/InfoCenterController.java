@@ -71,6 +71,11 @@ public class InfoCenterController {
                 page, pageSize));
     }
 
+    @GetMapping("/info-center/notices/categories")
+    public Result<Object> listNoticeCategories(@AuthenticationPrincipal UserDetails principal) {
+        return Result.ok(infoCenterService.listNoticeCategories(optionalUser(principal)));
+    }
+
     @GetMapping("/info-center/notices/{id}")
     public Result<Object> noticeDetail(@PathVariable Long id, @AuthenticationPrincipal UserDetails principal) {
         return Result.ok(infoCenterService.getNoticeDetail(id, optionalUser(principal)));

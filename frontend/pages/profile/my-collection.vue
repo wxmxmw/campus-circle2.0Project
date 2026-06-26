@@ -54,11 +54,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { userApi } from '@/api/user'
+import { toAbsoluteUrl } from '@/utils/api'
 
 const list = ref([])
 const page = ref(1)
 const hasMore = ref(true)
 const loading = ref(false)
+const getImageUrl = (url) => toAbsoluteUrl(url, '/static/logo.png')
 
 onMounted(() => {
   fetchData()
@@ -77,7 +79,16 @@ const fetchData = async () => {
     console.log('收藏列表返回:', res) // 调试点 1
 
     if (res.code === 200) {
-      const newItems = res.data.list || []
+      const newItems = (res.data.list || []).map((item) => ({
+        ...item,
+        author: item.author
+          ? {
+              ...item.author,
+              avatar: getImageUrl(item.author.avatar || item.author.avatarUrl)
+            }
+          : item.author,
+        images: Array.isArray(item.images) ? item.images.map(getImageUrl) : []
+      }))
       
       if (page.value === 1) {
         list.value = newItems

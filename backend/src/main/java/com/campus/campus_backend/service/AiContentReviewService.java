@@ -45,28 +45,28 @@ public class AiContentReviewService {
     @Value("${ai.review.semantic-check.enabled:true}")
     private boolean semanticCheckEnabled;
 
-    @Value("${ai.review.semantic-check.model:gemini-2.5-flash}")
+    @Value("${ai.review.semantic-check.model:gpt-4.1-mini}")
     private String semanticModel;
 
     @Value("${ai.review.threshold.medium:2}")
     private int mediumThreshold;
 
-    @Value("${ai.gemini.api-key:}")
+    @Value("${ai.openai.api-key:}")
     private String apiKey;
 
-    @Value("${ai.gemini.base-url:https://generativelanguage.googleapis.com/v1beta/models}")
+    @Value("${ai.openai.base-url:https://api.openai.com/v1}")
     private String baseUrl;
 
-    @Value("${ai.gemini.connect-timeout-seconds:10}")
+    @Value("${ai.openai.connect-timeout-seconds:10}")
     private int connectTimeoutSeconds;
 
-    @Value("${ai.gemini.request-timeout-seconds:30}")
+    @Value("${ai.openai.request-timeout-seconds:30}")
     private int requestTimeoutSeconds;
 
-    @Value("${ai.gemini.proxy-host:}")
+    @Value("${ai.openai.proxy-host:}")
     private String proxyHost;
 
-    @Value("${ai.gemini.proxy-port:0}")
+    @Value("${ai.openai.proxy-port:0}")
     private int proxyPort;
 
     public AiContentReviewService(ObjectMapper objectMapper) {
@@ -172,15 +172,21 @@ public class AiContentReviewService {
                     %s
                     """.formatted(text, toJson(hits));
             Map<String, Object> body = new LinkedHashMap<>();
-            body.put("contents", List.of(Map.of("role", "user", "parts", List.of(Map.of("text", prompt)))));
-            body.put("generationConfig", Map.of("temperature", 0.0, "maxOutputTokens", 400, "responseMimeType", "application/json"));
+            body.put("model", normalizeModel(semanticModel));
+            body.put("temperature", 0.0);
+            body.put("max_tokens", 400);
+            body.put("response_format", Map.of("type", "json_object"));
+            body.put("messages", List.of(
+                    Map.of("role", "system", "content", "You are a safety classifier. Return valid JSON only."),
+                    Map.of("role", "user", "content", prompt)
+            ));
 
-            String endpoint = trimTrailingSlash(baseUrl) + "/" + normalizeModel(semanticModel) + ":generateContent";
+            String endpoint = trimTrailingSlash(baseUrl) + "/chat/completions";
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(endpoint))
                     .timeout(Duration.ofSeconds(requestTimeoutSeconds))
                     .header("Content-Type", "application/json")
-                    .header("x-goog-api-key", apiKey)
+                    .header("Authorization", "Bearer " + apiKey)
                     .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(body)))
                     .build();
 
@@ -190,7 +196,7 @@ public class AiContentReviewService {
                 return null;
             }
             JsonNode root = objectMapper.readTree(response.body());
-            String textResp = root.path("candidates").path(0).path("content").path("parts").path(0).path("text").asText("");
+            String textResp = root.path("choices").path(0).path("message").path("content").asText("");
             if (textResp.isBlank()) {
                 return null;
             }
@@ -313,16 +319,12 @@ public class AiContentReviewService {
     }
 
     private String normalizeModel(String value) {
-        String modelName = value == null || value.isBlank() ? "gemini-2.5-flash" : value.trim();
-        if (modelName.toLowerCase(Locale.ROOT).startsWith("models/")) {
-            return modelName.substring("models/".length());
-        }
-        return modelName;
+        return value == null || value.isBlank() ? "gpt-4.1-mini" : value.trim();
     }
 
     private String trimTrailingSlash(String value) {
         String result = value == null || value.isBlank()
-                ? "https://generativelanguage.googleapis.com/v1beta/models"
+                ? "https://api.openai.com/v1"
                 : value.trim();
         while (result.endsWith("/")) {
             result = result.substring(0, result.length() - 1);

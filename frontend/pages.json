@@ -127,6 +127,26 @@
       }
     },
     {
+      "path": "pages/admin/governance/index",
+      "style": {
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/admin/governance/detail",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/admin/governance/official-data",
+      "style": {
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
       "path": "pages/login/register",
       "style": {
         "navigationStyle": "custom",

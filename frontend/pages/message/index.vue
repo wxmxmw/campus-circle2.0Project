@@ -102,6 +102,7 @@
 <script>
 import TabBar from '@/components/TabBar.vue'
 import { getChatList, getNotifyList, markChatAsRead, markNotifyAsRead } from '../../api/message.js'
+import { toAbsoluteUrl } from '@/utils/api'
 
 export default {
   components: {
@@ -129,6 +130,10 @@ export default {
   },
 
   methods: {
+    getImageUrl(url) {
+      return toAbsoluteUrl(url, '/static/logo.png')
+    },
+
     syncPageTitle(title) {
       uni.setNavigationBarTitle({
         title
@@ -149,7 +154,10 @@ export default {
           const uniqueChats = new Map()
           ;(res.data.list || []).forEach((chat) => {
             if (!uniqueChats.has(chat.userId)) {
-              uniqueChats.set(chat.userId, chat)
+              uniqueChats.set(chat.userId, {
+                ...chat,
+                avatar: this.getImageUrl(chat.avatar || chat.avatarUrl)
+              })
             }
           })
           this.chatList = Array.from(uniqueChats.values())
@@ -164,7 +172,10 @@ export default {
       try {
         const res = await getNotifyList()
         if (res.code === 200) {
-          this.notifyList = res.data.list || []
+          this.notifyList = (res.data.list || []).map((item) => ({
+            ...item,
+            avatar: this.getImageUrl(item.avatar || item.avatarUrl)
+          }))
           this.unreadNotify = res.data.unreadCount || 0
         }
       } catch (error) {

@@ -62,7 +62,7 @@
 
           <image
             class="avatar"
-            :src="currentUserAvatar ? getFullImageUrl(currentUserAvatar) : '/static/avatars/default.png'"
+            :src="currentUserAvatar ? getFullImageUrl(currentUserAvatar) : '/static/logo.png'"
             mode="aspectFill"
           />
         </view>
@@ -114,7 +114,7 @@ export default {
       userId: null,
       chatUser: {},
       currentUserId: null,
-      currentUserAvatar: '/static/avatars/default.png',
+      currentUserAvatar: '/static/logo.png',
       messageList: [],
       inputText: '',
       scrollTop: 0,
@@ -132,11 +132,11 @@ export default {
     this.currentUserId = userStore.userInfo?.id
 
     if (userStore.userInfo) {
-      this.currentUserAvatar = userStore.userInfo.avatar || '/static/avatars/default.png'
+      this.currentUserAvatar = userStore.userInfo.avatar || userStore.userInfo.avatarUrl || '/static/logo.png'
     } else {
       userStore.$subscribe((mutation, state) => {
         if (state.userInfo) {
-          this.currentUserAvatar = state.userInfo.avatar || '/static/avatars/default.png'
+          this.currentUserAvatar = state.userInfo.avatar || state.userInfo.avatarUrl || '/static/logo.png'
         }
       })
     }
@@ -176,7 +176,7 @@ export default {
     },
 
     getFullImageUrl(url) {
-      return toAbsoluteUrl(url, '/static/avatars/default.png')
+      return toAbsoluteUrl(url, '/static/logo.png')
     },
 
     async fetchMessages() {

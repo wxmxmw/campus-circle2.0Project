@@ -253,16 +253,7 @@ public class PostsController {
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("id", p.getId());
 
-            String title = p.getSummary();
-            if (title == null || title.isEmpty()) {
-                String content = p.getContent();
-                if (content != null) {
-                    title = content.length() > 20 ? content.substring(0, 20) + "..." : content;
-                } else {
-                    title = "";
-                }
-            }
-            item.put("title", title);
+            item.put("title", buildPostTitle(p));
             item.put("content", p.getContent());
 
             User u = p.getUser();
@@ -307,8 +298,10 @@ public class PostsController {
             pageSize = 10;
         }
 
-        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page - 1,
-                pageSize);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                page - 1,
+                pageSize,
+                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
         org.springframework.data.domain.Page<Post> postsPage;
         boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
 
@@ -904,11 +897,31 @@ public class PostsController {
     }
 
     private String buildPostTitle(Post post) {
-        String title = post.getSummary();
+        String title = sanitizeDisplayText(post.getSummary());
         if (title != null && !title.isBlank()) {
             return title;
         }
-        return "";
+        String content = sanitizeDisplayText(post.getContent());
+        if (content == null || content.isBlank()) {
+            return "";
+        }
+        String normalized = content.replaceAll("\\s+", " ").trim();
+        return normalized.length() > 30 ? normalized.substring(0, 30) + "..." : normalized;
+    }
+
+    private String sanitizeDisplayText(String text) {
+        if (text == null) {
+            return null;
+        }
+        String value = text.trim();
+        if (value.isBlank()) {
+            return null;
+        }
+        // Prefer the original content when a stored summary contains mojibake markers.
+        if (value.contains("�") || value.contains("锟") || value.contains("鈥") || value.contains("馃")) {
+            return null;
+        }
+        return value;
     }
 
     private List<String> normalizeTags(List<String> rawTags) {

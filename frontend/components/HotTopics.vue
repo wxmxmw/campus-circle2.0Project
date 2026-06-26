@@ -7,21 +7,21 @@
 
     <view class="posts-container">
       <view
-        class="post-item"
         v-for="post in topics"
         :key="post.id"
+        class="post-item"
         @click="handlePostClick(post)"
       >
         <view class="post-content">
           <text class="topic-tag">#</text>
           <text class="post-text">
-            {{ post.title.length > 25 ? post.title.slice(0, 25) + '...' : post.title }}
+            {{ displayTitle(post) }}
           </text>
           <text class="post-hot-icon">{{ post.hot ? 'HOT' : '' }}</text>
         </view>
 
         <view class="post-meta">
-          <text class="post-views">点赞 {{ post.views }}</text>
+          <text class="post-views">浏览 {{ post.viewsText || post.views || 0 }}</text>
         </view>
       </view>
     </view>
@@ -38,14 +38,24 @@ export default {
     },
   },
   methods: {
+    displayTitle(post) {
+      const raw = (post && typeof post.title === 'string' ? post.title : '').trim()
+      if (!raw) return '未命名帖子'
+      return raw.length > 25 ? raw.slice(0, 25) + '...' : raw
+    },
     handlePostClick(post) {
-      this.$emit('topic-click', post);
+      const postId = Number(post?.id)
+      if (!Number.isFinite(postId) || postId <= 0) {
+        this.$emit('invalid-topic', post)
+        return
+      }
+      this.$emit('topic-click', { ...post, id: postId })
     },
     handleMoreClick() {
-      this.$emit('more-click');
+      this.$emit('more-click')
     },
   },
-};
+}
 </script>
 
 <style scoped>

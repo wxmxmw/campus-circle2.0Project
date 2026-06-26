@@ -71,7 +71,7 @@ const form = reactive({
   bio: ''
 })
 
-const avatarPreviewUrl = computed(() => toAbsoluteUrl(form.avatarUrl, '/static/default-avatar.png'))
+const avatarPreviewUrl = computed(() => toAbsoluteUrl(form.avatarUrl, '/static/logo.png'))
 
 onMounted(() => {
   // 回显当前数据

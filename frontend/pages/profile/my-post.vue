@@ -16,7 +16,7 @@
           <view class="card-header">
             <view class="user-info">
               <!-- 直接复用 store 里的当前用户头像，因为是“我的发布” -->
-              <image :src="userStore.avatar || '../../static/default-avatar.png'" class="avatar-img" mode="aspectFill"/>
+              <image :src="userStore.avatar || '/static/logo.png'" class="avatar-img" mode="aspectFill"/>
               <view class="meta">
                 <text class="user-name">{{ userStore.nickname }}</text>
                 <text class="post-time">{{ formatDate(item.createTime) }}</text>
@@ -67,22 +67,29 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { userApi } from '@/api/user'
+import { toAbsoluteUrl } from '@/utils/api'
 import { useUserStore } from '@/stores/user' // 引入store拿头像
 
 const userStore = useUserStore()
 const list = ref([])
+const getImageUrl = (url) => toAbsoluteUrl(url, '/static/logo.png')
 
 onMounted(async () => {
   try {
     const res = await userApi.getMyPosts()
-    if (res.code === 200) list.value = res.data.list
+    if (res.code === 200) {
+      list.value = (res.data.list || []).map((item) => ({
+        ...item,
+        images: Array.isArray(item.images) ? item.images.map(getImageUrl) : []
+      }))
+    }
   } catch (e) {}
 })
 
 const goBack = () => uni.navigateBack()
 const goToDetail = (post) => uni.navigateTo({ url: `/pages/post/detail?id=${post.id}` })
 const formatDate = (str) => { if(!str) return ''; const d = new Date(str); return `${d.getMonth()+1}月${d.getDate()}日`; }
-const previewImage = (urls, current) => uni.previewImage({ urls, current })
+const previewImage = (urls, current) => uni.previewImage({ urls: urls.map(getImageUrl), current })
 
 </script>
 

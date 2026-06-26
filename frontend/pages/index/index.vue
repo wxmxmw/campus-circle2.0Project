@@ -68,6 +68,16 @@ import { setPostTop, likePost } from '@/api/post.js';
 import { toAbsoluteUrl } from '@/utils/api';
 import { getHotTopics, getCategories, getPosts, searchPosts } from '@/api/index.js';
 
+const normalizeHotPost = (post) => {
+  const postId = Number(post?.id);
+  return {
+    ...post,
+    id: Number.isFinite(postId) ? postId : null,
+    title: typeof post?.title === 'string' ? post.title.trim() : '',
+    viewsText: post?.viewsText || (post?.views ?? 0),
+  };
+};
+
 export default {
   components: { TabBar, PostCard, HotTopics, CategoryNav },
   data() {
@@ -82,6 +92,7 @@ export default {
       page: 1,
       pageSize: 10,
       hasMore: true,
+      loadingPosts: false,
     };
   },
   async onLoad() {
@@ -96,6 +107,14 @@ export default {
   onPageScroll(e) {
     this.isNavFixed = e.scrollTop > 400;
   },
+  onReachBottom() {
+    this.loadPosts(false);
+  },
+  onPullDownRefresh() {
+    this.loadPosts(true).finally(() => {
+      uni.stopPullDownRefresh();
+    });
+  },
   methods: {
     syncPageTitle(title) {
       uni.setNavigationBarTitle({
@@ -107,7 +126,11 @@ export default {
     },
     async loadTopics() {
       const res = await getHotTopics();
-      if (res.code === 200) this.topics = res.data;
+      if (res.code === 200) {
+        this.topics = (Array.isArray(res.data) ? res.data : [])
+          .map(normalizeHotPost)
+          .filter(post => post.id);
+      }
     },
     async handleTopClick(post) {
       if (post.isTop) {
@@ -139,27 +162,39 @@ export default {
       }
     },
     async loadPosts(reset = true) {
+      if (this.loadingPosts) return;
       if (reset) {
         this.page = 1;
         this.posts = [];
+        this.hasMore = true;
       }
+      if (!reset && !this.hasMore) return;
+
+      this.loadingPosts = true;
       const params = { page: this.page, pageSize: this.pageSize };
-      if (this.currentCategory && this.currentCategory > 0) params.categoryId = this.currentCategory;
-      const res = await getPosts(params);
-      if (res.code === 200) {
-        const list = res.data.list;
-        this.posts = reset ? list : [...this.posts, ...list];
-        this.hasMore = res.data.hasMore;
-        if (res.data.hasMore) this.page++;
-        this.posts.sort((a, b) => {
-          const topDiff = (b.isTop ? 1 : 0) - (a.isTop ? 1 : 0);
-          if (topDiff !== 0) return topDiff;
-          return (new Date(b.time).getTime() || 0) - (new Date(a.time).getTime() || 0);
-        });
+      const normalizedCategory = Number(this.currentCategory);
+      if (Number.isFinite(normalizedCategory) && normalizedCategory > 0) {
+        params.categoryId = normalizedCategory;
+      }
+      try {
+        const res = await getPosts(params);
+        if (res.code === 200) {
+          const list = Array.isArray(res.data?.list) ? res.data.list : [];
+          this.posts = reset ? list : [...this.posts, ...list];
+          this.hasMore = !!res.data?.hasMore;
+          if (this.hasMore) this.page++;
+          this.posts.sort((a, b) => {
+            const topDiff = (b.isTop ? 1 : 0) - (a.isTop ? 1 : 0);
+            if (topDiff !== 0) return topDiff;
+            return (new Date(b.time).getTime() || 0) - (new Date(a.time).getTime() || 0);
+          });
+        }
+      } finally {
+        this.loadingPosts = false;
       }
     },
     async switchCategory(id) {
-      this.currentCategory = id;
+      this.currentCategory = Number(id) || 0;
       await this.loadPosts(true);
     },
     async search() {
@@ -173,6 +208,10 @@ export default {
       }
     },
     handleTopicClick(post) {
+      if (!post?.id) {
+        uni.showToast({ title: '帖子数据异常', icon: 'none' });
+        return;
+      }
       uni.navigateTo({ url: `/pages/post/detail?id=${post.id}` });
     },
     handleTopicsMore() {

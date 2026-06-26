@@ -52,11 +52,13 @@ import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { userApi } from '@/api/user'
 import { useUserStore } from '@/stores/user'
+import { toAbsoluteUrl } from '@/utils/api'
 
 const userStore = useUserStore()
 const list = ref([])
 const type = ref('following') 
 const targetUserId = ref('')
+const getImageUrl = (url) => toAbsoluteUrl(url, '/static/logo.png')
 
 onLoad((options) => {
   if (options.type) {
@@ -86,7 +88,10 @@ const loadData = async () => {
     }
     
     if (res.code === 200) {
-      list.value = res.data.list
+      list.value = (res.data.list || []).map((user) => ({
+        ...user,
+        avatarUrl: getImageUrl(user.avatarUrl)
+      }))
     }
   } catch (e) { 
     console.error(e) 

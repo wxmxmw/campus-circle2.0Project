@@ -1,6 +1,6 @@
 {
     "name" : "campus",
-    "appid" : "__UNI__08BBAEF",
+    "appid" : "__UNI__6AFC06A",
     "description" : "",
     "versionName" : "1.0.0",
     "versionCode" : "100",
@@ -48,6 +48,11 @@
     },
     /* 快应用特有相关 */
     "quickapp" : {},
+    "h5" : {
+        "router" : {
+            "base" : "/wxm/"
+        }
+    },
     /* 小程序特有相关 */
     "mp-weixin" : {
         "appid" : "",

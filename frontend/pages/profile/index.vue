@@ -45,7 +45,7 @@
       <view class="menu-item" @click="handleMyErrands"><text>我的跑腿</text><text class="arrow">></text></view>
       <view class="menu-item" @click="handleMyCollections"><text>我的收藏</text><text class="arrow">></text></view>
       <view class="menu-item" @click="handleSettings"><text>个人资料设置</text><text class="arrow">></text></view>
-      <view v-if="userStore.isAdmin" class="menu-item admin-entry" @click="handleAdmin"><text>内容审核后台</text><text class="arrow">></text></view>
+      <view v-if="userStore.isAdmin" class="menu-item admin-entry" @click="handleAdmin"><text>社区治理工作台</text><text class="arrow">></text></view>
       <view v-if="userStore.isLoggedIn" class="menu-item logout" @click="handleLogout"><text>退出登录</text></view>
     </view>
 
@@ -130,7 +130,7 @@ const handleMyPosts = () => { if (!userStore.isLoggedIn) return uni.navigateTo({
 const handleMyCollections = () => { if (!userStore.isLoggedIn) return uni.navigateTo({ url: '/pages/login/index' }); uni.navigateTo({ url: '/pages/profile/my-collection' }) }
 const handleFollowers = () => { if (userStore.isLoggedIn) uni.navigateTo({ url: '/pages/profile/follow-list?type=followers' }) }
 const goToFollowList = () => { if (userStore.isLoggedIn) uni.navigateTo({ url: '/pages/profile/follow-list?type=following' }) }
-const handleAdmin = () => { uni.navigateTo({ url: '/pages/admin/report-list' }) }
+const handleAdmin = () => { uni.navigateTo({ url: '/pages/admin/governance/index' }) }
 const handleLogout = () => {
   uni.showModal({
     title: '提示',

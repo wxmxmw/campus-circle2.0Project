@@ -12,6 +12,7 @@ import com.campus.campus_backend.security.JwtUtil;
 import com.campus.campus_backend.vo.TokenVO;
 import com.campus.campus_backend.vo.LoginRespVO;
 import com.campus.campus_backend.vo.UserBriefVO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -34,16 +36,20 @@ public class AuthController {
     private final UserOnlineService userOnlineService;
     private final UserService userService;
     private final StringRedisTemplate redisTemplate;
+    private final boolean redisEnabled;
 
     public AuthController(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder, JwtUtil jwtUtil,
-                          UserRepository userRepository, UserService userService, StringRedisTemplate redisTemplate, UserOnlineService userOnlineService) {
+                          UserRepository userRepository, UserService userService, Optional<StringRedisTemplate> redisTemplate,
+                          UserOnlineService userOnlineService,
+                          @Value("${app.redis.enabled:false}") boolean redisEnabled) {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
         this.userService = userService;
-        this.redisTemplate = redisTemplate;
+        this.redisTemplate = redisEnabled ? redisTemplate.orElse(null) : null;
         this.userOnlineService = userOnlineService;
+        this.redisEnabled = redisEnabled;
     }
 
     @PostMapping("/register")
@@ -115,9 +121,11 @@ public class AuthController {
         long now = Instant.now().toEpochMilli();
         long ttl = Math.max(exp - now, 1000);
         String key = "BLACKLIST:JWT:" + token;
-        try {
-            redisTemplate.opsForValue().set(key, "1", ttl, TimeUnit.MILLISECONDS);
-        } catch (Exception e) {
+        if (redisEnabled && redisTemplate != null) {
+            try {
+                redisTemplate.opsForValue().set(key, "1", ttl, TimeUnit.MILLISECONDS);
+            } catch (Exception e) {
+            }
         }
         return Result.okMessage("已退出");
     }

@@ -1,59 +1,73 @@
-# 本地开发说明
+# Backend Local Dev
 
-这个项目现在支持两种本地启动方式：
+当前后端开发环境已经切换为默认连接远程 MySQL，不再默认使用本地 H2。
 
-1. 默认方式：`local` 配置，使用本地 H2 文件数据库，不依赖旧服务器。
-2. MySQL 方式：`local-mysql` 配置，连接你自己的本地 MySQL。
+## 当前默认配置
 
-## 1. 默认启动
+默认激活 profile：
 
-直接在后端目录运行：
+- `local-mysql`
+
+对应配置文件：
+
+- `src/main/resources/application.properties`
+- `src/main/resources/application-local-mysql.properties`
+
+当前默认数据库连接：
+
+- Host: `121.199.30.215`
+- Port: `3306`
+- Database: `campus_circle_wxm_db`
+- Username: `wxm`
+- Password: 通过环境变量 `REMOTE_DB_PASSWORD` 提供
+
+## 启动前准备
+
+后端启动前，先在终端设置数据库密码：
 
 ```powershell
-mvn spring-boot:run
+$env:REMOTE_DB_PASSWORD="你的数据库密码"
 ```
 
-默认会使用 `application-local.properties`：
+Redis 当前默认仍然是本机：
 
-- 数据库：`./data/campus-circle.mv.db`
-- 文件上传目录：`./uploads`
-- 日志目录：`./logs`
-- H2 控制台：`http://localhost:8080/h2-console`
+- Host: `localhost`
+- Port: `6379`
 
-首次启动会自动建表，并初始化：
+如果本机没有 Redis，部分在线状态和 token 黑名单能力可能降级，但核心接口通常仍可联调。
 
-- 管理员账号：`admin`
-- 管理员密码：`admin123`
-- 默认分类数据
+## 推荐启动方式
 
-## 2. 使用本地 MySQL
-
-如果你希望后端连本地 MySQL，先准备一个可登录的本地账号，然后运行：
+在 `backend/` 目录执行：
 
 ```powershell
-$env:SPRING_PROFILES_ACTIVE="local-mysql"
-$env:LOCAL_DB_URL="jdbc:mysql://localhost:3306/campus_circle?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8&createDatabaseIfNotExist=true"
-$env:LOCAL_DB_USERNAME="你的本地MySQL用户名"
-$env:LOCAL_DB_PASSWORD="你的本地MySQL密码"
-mvn spring-boot:run
+mvn clean package -DskipTests
+java -jar target\campus-backend-0.0.1-SNAPSHOT.jar
 ```
 
 说明：
 
-- `ddl-auto=update` 已开启，空库会自动建表。
-- Redis 默认连 `localhost:6379`；如果 Redis 没启动，核心接口仍可调试，只是在线状态和 token 黑名单能力会降级。
+- 当前在 Windows 中文路径环境下，`mvn spring-boot:run` 可能出现主类加载失败
+- 因此当前推荐使用 `package + java -jar` 方式启动
 
-## 3. 前端联调
+## 启动成功后检查
 
-前端请求路径已经是相对地址 `/api`，本地后端启动在 `8080` 后即可联调。
+建议至少检查以下地址：
 
-如果你用 HBuilderX/uni-app 本地运行前端，需要保证开发代理或同源访问最终能把 `/api/*` 转到本地后端。
+1. Swagger UI: `http://localhost:8080/swagger-ui.html`
+2. 健康检查: `http://localhost:8080/actuator/health`
 
-## 4. 已验证结果
+如果远程数据库连接成功，JPA 会根据实体自动建表或更新表结构，因为当前配置为：
 
-我已在 2026-04-30 用默认 `local` 配置实际启动过后端，结果如下：
+```properties
+spring.jpa.hibernate.ddl-auto=update
+```
 
-- Spring Boot 正常启动在 `18080`
-- H2 本地数据库文件已生成：`data/campus-circle.mv.db`
-- JPA 自动建表成功
-- `admin / admin123` 初始化成功
+## 当前运行目录相关说明
+
+即使数据库已经切到远程 MySQL，下面这些内容仍然默认保存在后端本地运行目录：
+
+- 上传文件目录：`./uploads`
+- 日志文件：`./logs/campus-backend.log`
+
+也就是说，如果你在本机启动后端，上传图片会保存在本机 `backend/uploads/` 下；以后部署到服务器后，则会保存在服务器上的对应目录。
