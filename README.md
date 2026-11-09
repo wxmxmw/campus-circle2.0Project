@@ -31,7 +31,3 @@ See [deployment instructions](DEPLOYMENT_GUIDE.md) and the [public release check
 ## Tests
 
 Run `mvn test` from `backend/`. Tests use an in-memory H2 database and a test-only JWT secret.
-
-## License
-
-No license has been selected. Contact the repository owner before reusing this code.
