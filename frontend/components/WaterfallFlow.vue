@@ -24,12 +24,12 @@
   <!-- 加载状态 -->
   <view v-if="loading" class="loading">
     <uni-loading type="circle" />
-    <text class="loading-text">加载中...</text>
+    <text class="loading-text">Loading...</text>
   </view>
   
   <!-- 没有更多 -->
   <view v-if="!hasMore && data.length > 0" class="no-more">
-    没有更多了~
+    No more items
   </view>
 </template>
 

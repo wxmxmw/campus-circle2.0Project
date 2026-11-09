@@ -5,45 +5,45 @@
       <view class="nav">
         <view class="nav-btn" @click="goBack">‹</view>
         <view class="nav-title">
-          <text class="title">社区治理工作台</text>
-          <text class="subtitle">舆情演化与治理 Agent</text>
+          <text class="title">Community moderation</text>
+          <text class="subtitle">Community moderation agents</text>
         </view>
-        <view class="nav-btn ghost" @click="openReports">举报台</view>
+        <view class="nav-btn ghost" @click="openReports">Reports</view>
       </view>
     </view>
 
     <scroll-view scroll-y class="content" @scrolltolower="loadEvents">
       <view class="hero-card">
         <view class="hero-copy">
-          <text class="hero-title">一键执行社区监测</text>
+          <text class="hero-title">Run community monitoring</text>
           <text class="hero-text">
-            自动扫描帖子、评论和举报信号，完成聚类、态势分析、谣言核验和治理建议生成，
-            并把每个 Agent 的执行状态和输出结果实时展示出来，方便观察多 Agent 协作过程。
+            Scan posts, comments, and reports to cluster signals, analyze risk, verify rumors, and suggest actions.
+            Agent progress and results appear here.
           </text>
         </view>
 
         <view class="hero-actions">
-          <button class="primary-btn" :loading="running" :disabled="running" @click="handleRunMonitor">执行监测</button>
-          <button class="secondary-btn" :disabled="running" @click="openOfficialData">权威数据</button>
+          <button class="primary-btn" :loading="running" :disabled="running" @click="handleRunMonitor">Run monitoring</button>
+          <button class="secondary-btn" :disabled="running" @click="openOfficialData">Official data</button>
         </view>
 
         <view class="hero-actions compact">
           <button class="secondary-btn" :disabled="running" @click="toggleMergeMode">
-            {{ mergeMode ? '退出合并模式' : '合并事件' }}
+            {{ mergeMode ? 'Exit merge mode' : 'Merge events' }}
           </button>
-          <button class="secondary-btn" :disabled="running || !mergeMode" @click="submitMerge">确认合并</button>
+          <button class="secondary-btn" :disabled="running || !mergeMode" @click="submitMerge">Confirm merge</button>
         </view>
 
         <view class="hero-actions compact">
-          <button class="danger-btn" :disabled="running" @click="handleClearEvents">清空事件</button>
+          <button class="danger-btn" :disabled="running" @click="handleClearEvents">Clear events</button>
         </view>
 
         <view v-if="currentRun" class="monitor-panel" :class="stageStatusClass(currentRun.status)">
           <view class="monitor-top">
-            <text class="monitor-title">监测执行中</text>
+            <text class="monitor-title">Monitoring in progress</text>
             <text class="monitor-tag">{{ currentRun?.status || 'RUNNING' }}</text>
           </view>
-          <text class="monitor-text">{{ currentRun?.message || '正在等待监测任务返回状态...' }}</text>
+          <text class="monitor-text">{{ currentRun?.message || 'Waiting for monitoring status...' }}</text>
           <view class="stage-list">
             <view
               v-for="item in monitorDisplayStages"
@@ -68,33 +68,33 @@
 
         <view v-else-if="runSummary" class="run-summary">
           <text>
-            最近一次扫描原始内容 {{ runSummary.scannedSignalCount || 0 }} 条，新增治理信号 {{ runSummary.newSignalCount || 0 }} 条，影响
-            {{ (runSummary.affectedEventIds || []).length }} 个事件，完成
-            {{ runSummary.reanalyzedCount || 0 }} 次事件分析。
+            Last scan checked {{ runSummary.scannedSignalCount || 0 }} items, found {{ runSummary.newSignalCount || 0 }} new signals, affected
+            {{ (runSummary.affectedEventIds || []).length }} events, and completed
+            {{ runSummary.reanalyzedCount || 0 }} event analyses.
           </text>
         </view>
 
         <view v-if="mergeMode" class="merge-panel">
-          <text class="merge-title">事件合并模式</text>
+          <text class="merge-title">Event merge mode</text>
           <text class="merge-text">
-            先在下方列表中选择 2 个事件，再点击“确认合并”。系统会让你选择保留哪个事件作为目标事件。
+            Select two events below, confirm the merge, then choose which event to keep.
           </text>
-          <text class="merge-count">当前已选择 {{ selectedMergeIds.length }}/2 个事件</text>
+          <text class="merge-count">Selected {{ selectedMergeIds.length }}/2 events</text>
         </view>
       </view>
 
       <view v-if="workflowRuns.length > 0" class="workflow-card">
         <view class="section-head">
-          <text class="section-title">多 Agent 执行流程</text>
-          <text class="section-subtitle">展示本次监测中每个事件的分析进度与 Agent 输出</text>
+          <text class="section-title">Agent workflow</text>
+          <text class="section-subtitle">Track each event and its agent results</text>
         </view>
 
         <view v-for="workflow in workflowRuns" :key="workflow.eventId" class="workflow-event">
           <view class="workflow-event-top">
             <view>
-              <text class="workflow-event-title">{{ workflow.title || `事件 #${workflow.eventId}` }}</text>
+              <text class="workflow-event-title">{{ workflow.title || `Event #${workflow.eventId}` }}</text>
               <text class="workflow-event-meta">
-                事件 #{{ workflow.eventId }} · 状态 {{ workflow.status || '--' }} · 风险 {{ workflow.riskLevel || '--' }} · 核验 {{ workflow.rumorStatus || '--' }}
+                Event #{{ workflow.eventId }} · Status {{ workflow.status || '--' }} · Risk {{ workflow.riskLevel || '--' }} · Verification {{ workflow.rumorStatus || '--' }}
               </text>
             </view>
             <text class="workflow-version">V{{ workflow.snapshotVersion || 1 }}</text>
@@ -109,7 +109,7 @@
               <view class="agent-meta">
                 <text class="agent-badge">{{ stageStatusText(agent.status) }}</text>
               </view>
-              <text class="agent-summary">{{ agent.summary || '等待执行' }}</text>
+              <text class="agent-summary">{{ agent.summary || 'Waiting' }}</text>
               <view class="agent-lines">
                 <text
                   v-for="(line, index) in buildAgentLines(agent)"
@@ -124,21 +124,21 @@
 
       <view class="filters">
         <view class="filter-pill" @click="selectStatus">
-          <text>状态</text>
-          <text class="pill-value">{{ filterLabel(statusOptions, filters.status, '全部') }}</text>
+          <text>Status</text>
+          <text class="pill-value">{{ filterLabel(statusOptions, filters.status, 'All') }}</text>
         </view>
         <view class="filter-pill" @click="selectRisk">
-          <text>风险</text>
-          <text class="pill-value">{{ filterLabel(riskOptions, filters.riskLevel, '全部') }}</text>
+          <text>Risk</text>
+          <text class="pill-value">{{ filterLabel(riskOptions, filters.riskLevel, 'All') }}</text>
         </view>
         <view class="filter-pill" @click="selectRumor">
-          <text>核验</text>
-          <text class="pill-value">{{ filterLabel(rumorOptions, filters.rumorStatus, '全部') }}</text>
+          <text>Verification</text>
+          <text class="pill-value">{{ filterLabel(rumorOptions, filters.rumorStatus, 'All') }}</text>
         </view>
       </view>
 
-      <view v-if="loading && events.length === 0" class="state-card">事件列表加载中...</view>
-      <view v-else-if="events.length === 0" class="state-card">当前没有匹配条件的治理事件。</view>
+      <view v-if="loading && events.length === 0" class="state-card">Loading events...</view>
+      <view v-else-if="events.length === 0" class="state-card">No matching moderation events.</view>
 
       <view v-else class="event-list">
         <view
@@ -155,27 +155,27 @@
               <text class="rumor-badge">{{ item.rumorStatus }}</text>
             </view>
             <view class="event-top-right">
-              <text v-if="mergeMode" class="select-indicator">{{ selectedMergeIds.includes(item.id) ? '已选中' : '可选择' }}</text>
+              <text v-if="mergeMode" class="select-indicator">{{ selectedMergeIds.includes(item.id) ? 'Selected' : 'Select' }}</text>
               <text class="time">{{ formatDate(item.lastActiveAt) }}</text>
             </view>
           </view>
           <text class="event-title">{{ item.title }}</text>
-          <text class="event-summary">{{ item.summary || '等待新一轮分析结果生成。' }}</text>
+          <text class="event-summary">{{ item.summary || 'Waiting for analysis.' }}</text>
           <view class="metrics">
-            <text>风险值 {{ item.riskScore || 0 }}</text>
-            <text>信号 {{ item.sourceCount || 0 }}</text>
-            <text>举报 {{ item.reportCount || 0 }}</text>
-            <text>负面 {{ item.negativeRatio || 0 }}%</text>
+            <text>Risk score {{ item.riskScore || 0 }}</text>
+            <text>Signals {{ item.sourceCount || 0 }}</text>
+            <text>Reports {{ item.reportCount || 0 }}</text>
+            <text>Negative {{ item.negativeRatio || 0 }}%</text>
           </view>
           <view class="suggestion-row">
-            <text class="suggestion-label">当前建议</text>
+            <text class="suggestion-label">Current suggestion</text>
             <text class="suggestion-value">{{ item.currentSuggestion || 'OBSERVE' }}</text>
           </view>
         </view>
       </view>
 
-      <view v-if="loadingMore" class="load-more loading-more">加载更多事件...</view>
-      <view v-else-if="hasMore" class="load-more" @click="loadEvents">加载更多</view>
+      <view v-if="loadingMore" class="load-more loading-more">Loading more events...</view>
+      <view v-else-if="hasMore" class="load-more" @click="loadEvents">Load more</view>
       <view style="height: 40rpx;"></view>
     </scroll-view>
   </view>
@@ -200,32 +200,32 @@ const currentRun = ref(null)
 let pollTimer = null
 
 const monitorStageMeta = [
-  { key: 'ingest', label: '信号采集 Agent' },
-  { key: 'cluster', label: '事件聚类 Agent' }
+  { key: 'ingest', label: 'Signal collection agent' },
+  { key: 'cluster', label: 'Event clustering agent' }
 ]
 
 const statusOptions = [
-  { label: '全部', value: '' },
-  { label: '开放中', value: 'OPEN' },
-  { label: '观察中', value: 'OBSERVING' },
-  { label: '待处理', value: 'ACTION_PENDING' },
-  { label: '已升级', value: 'ESCALATED' },
-  { label: '已关闭', value: 'CLOSED' }
+  { label: 'All', value: '' },
+  { label: 'Open', value: 'OPEN' },
+  { label: 'Observing', value: 'OBSERVING' },
+  { label: 'Action needed', value: 'ACTION_PENDING' },
+  { label: 'Escalated', value: 'ESCALATED' },
+  { label: 'Closed', value: 'CLOSED' }
 ]
 
 const riskOptions = [
-  { label: '全部', value: '' },
-  { label: '高风险', value: 'HIGH' },
-  { label: '中风险', value: 'MEDIUM' },
-  { label: '低风险', value: 'LOW' }
+  { label: 'All', value: '' },
+  { label: 'High risk', value: 'HIGH' },
+  { label: 'Medium risk', value: 'MEDIUM' },
+  { label: 'Low risk', value: 'LOW' }
 ]
 
 const rumorOptions = [
-  { label: '全部', value: '' },
-  { label: '已证实', value: 'CONFIRMED' },
-  { label: '待核验', value: 'UNVERIFIED' },
-  { label: '证据不足', value: 'INSUFFICIENT' },
-  { label: '已辟谣', value: 'REFUTED' }
+  { label: 'All', value: '' },
+  { label: 'Confirmed', value: 'CONFIRMED' },
+  { label: 'Unverified', value: 'UNVERIFIED' },
+  { label: 'Insufficient evidence', value: 'INSUFFICIENT' },
+  { label: 'Refuted', value: 'REFUTED' }
 ]
 
 const filters = reactive({
@@ -255,7 +255,7 @@ const workflowRuns = computed(() => {
 })
 
 onLoad(() => {
-  uni.setNavigationBarTitle({ title: '社区治理工作台' })
+  uni.setNavigationBarTitle({ title: 'Community moderation' })
 })
 
 onShow(() => {
@@ -344,7 +344,7 @@ const loadEvents = async (force = false) => {
       page.value += 1
     }
   } catch (error) {
-    uni.showToast({ title: error.message || '加载失败', icon: 'none' })
+    uni.showToast({ title: error.message || 'Loading failed', icon: 'none' })
   } finally {
     loading.value = false
     loadingMore.value = false
@@ -353,7 +353,7 @@ const loadEvents = async (force = false) => {
 
 const handleRunMonitor = () => {
   uni.showActionSheet({
-    itemList: ['扫描最近 24 小时', '扫描最近 48 小时', '扫描最近 72 小时', '扫描最近两周'],
+    itemList: ['Scan the last 24 hours', 'Scan the last 48 hours', 'Scan the last 72 hours', 'Scan the last two weeks'],
     success: async ({ tapIndex }) => {
       const windowHours = [24, 48, 72, 336][tapIndex] || 24
       try {
@@ -375,14 +375,14 @@ const handleRunMonitor = () => {
         currentRun.value = normalizeMonitorRun({
           runId: currentRunId.value,
           status: res.data?.status || 'PENDING',
-          message: res.data?.message || '监测任务已创建',
+          message: res.data?.message || 'Monitoring started',
           stages: [],
           workflowRuns: []
         })
         await fetchMonitorRun()
       } catch (error) {
         running.value = false
-        uni.showToast({ title: error.message || '执行失败', icon: 'none' })
+        uni.showToast({ title: error.message || 'Run failed', icon: 'none' })
       }
     }
   })
@@ -398,7 +398,7 @@ const fetchMonitorRun = async () => {
       running.value = false
       runSummary.value = currentRun.value.result || {}
       stopPolling()
-      uni.showToast({ title: '监测完成', icon: 'success' })
+      uni.showToast({ title: 'Monitoring complete', icon: 'success' })
       await resetAndLoad()
       return
     }
@@ -406,7 +406,7 @@ const fetchMonitorRun = async () => {
     if (currentRun.value.status === 'FAILED') {
       running.value = false
       stopPolling()
-      uni.showToast({ title: currentRun.value.message || '监测失败', icon: 'none' })
+      uni.showToast({ title: currentRun.value.message || 'Monitoring failed', icon: 'none' })
       return
     }
 
@@ -414,7 +414,7 @@ const fetchMonitorRun = async () => {
   } catch (error) {
     running.value = false
     stopPolling()
-    uni.showToast({ title: error.message || '获取监测状态失败', icon: 'none' })
+    uni.showToast({ title: error.message || 'Could not get monitoring status', icon: 'none' })
   }
 }
 
@@ -422,18 +422,18 @@ const buildStageLines = (stage) => {
   const output = stage.output || {}
   if (stage.key === 'ingest') {
     return [
-      output.scannedSignalCount != null ? `扫描内容 ${output.scannedSignalCount} 条` : '',
-      output.newSignalCount != null ? `新增治理信号 ${output.newSignalCount} 条` : '',
-      output.windowHours != null ? `监测窗口 ${output.windowHours} 小时` : ''
+      output.scannedSignalCount != null ? `Scanned ${output.scannedSignalCount} items` : '',
+      output.newSignalCount != null ? `${output.newSignalCount} new moderation signals` : '',
+      output.windowHours != null ? `Monitoring window: ${output.windowHours} hours` : ''
     ].filter(Boolean)
   }
 
   if (stage.key === 'cluster') {
     return [
-      output.clusteredSignalCount != null ? `参与聚类信号 ${output.clusteredSignalCount} 条` : '',
-      output.affectedEventCount != null ? `影响事件 ${output.affectedEventCount} 个` : '',
+      output.clusteredSignalCount != null ? `Clustered ${output.clusteredSignalCount} signals` : '',
+      output.affectedEventCount != null ? `Affected ${output.affectedEventCount} events` : '',
       Array.isArray(output.affectedEventIds) && output.affectedEventIds.length
-        ? `事件编号：${output.affectedEventIds.slice(0, 6).join('、')}`
+        ? `Event IDs：${output.affectedEventIds.slice(0, 6).join('、')}`
         : ''
     ].filter(Boolean)
   }
@@ -448,22 +448,22 @@ const buildAgentLines = (agent) => {
     return [
       output.demandsSummary || '',
       output.heatDescription || '',
-      output.riskLevel ? `风险等级：${output.riskLevel}` : ''
+      output.riskLevel ? `Risk level：${output.riskLevel}` : ''
     ].filter(Boolean)
   }
 
   if (agent.key === 'rumor') {
     return [
-      output.rumorStatus ? `核验结果：${output.rumorStatus}` : '',
-      ...(Array.isArray(output.coreClaims) ? output.coreClaims.slice(0, 2).map(item => `核心说法：${item}`) : []),
-      ...(Array.isArray(output.conflictPoints) ? output.conflictPoints.slice(0, 2).map(item => `冲突点：${item}`) : [])
+      output.rumorStatus ? `Verification result：${output.rumorStatus}` : '',
+      ...(Array.isArray(output.coreClaims) ? output.coreClaims.slice(0, 2).map(item => `Core claim：${item}`) : []),
+      ...(Array.isArray(output.conflictPoints) ? output.conflictPoints.slice(0, 2).map(item => `Conflict：${item}`) : [])
     ].filter(Boolean)
   }
 
   if (agent.key === 'suggestion') {
     return [
-      ...(Array.isArray(output.recommendedActions) ? output.recommendedActions.slice(0, 3).map(item => `建议动作：${item.type}`) : []),
-      ...(Array.isArray(output.humanReviewPoints) ? output.humanReviewPoints.slice(0, 3).map(item => `复核点：${item}`) : [])
+      ...(Array.isArray(output.recommendedActions) ? output.recommendedActions.slice(0, 3).map(item => `Suggested actions：${item.type}`) : []),
+      ...(Array.isArray(output.humanReviewPoints) ? output.humanReviewPoints.slice(0, 3).map(item => `Review point：${item}`) : [])
     ].filter(Boolean)
   }
 
@@ -473,15 +473,15 @@ const buildAgentLines = (agent) => {
 const stageStatusText = (status) => {
   switch (status) {
     case 'RUNNING':
-      return '执行中'
+      return 'Running'
     case 'COMPLETED':
-      return '已完成'
+      return 'Completed'
     case 'SKIPPED':
-      return '已跳过'
+      return 'Skipped'
     case 'FAILED':
-      return '失败'
+      return 'Failed'
     default:
-      return '等待中'
+      return 'Waiting'
   }
 }
 
@@ -513,7 +513,7 @@ const handleCardClick = (item) => {
   }
 
   if (current.length >= 2) {
-    uni.showToast({ title: '最多只能选择 2 个事件', icon: 'none' })
+    uni.showToast({ title: 'Select at most two events', icon: 'none' })
     return
   }
 
@@ -523,34 +523,34 @@ const handleCardClick = (item) => {
 
 const submitMerge = () => {
   if (!mergeMode.value) {
-    uni.showToast({ title: '请先进入合并模式', icon: 'none' })
+    uni.showToast({ title: 'Enter merge mode first', icon: 'none' })
     return
   }
   if (selectedMergeIds.value.length !== 2) {
-    uni.showToast({ title: '请先选择 2 个事件', icon: 'none' })
+    uni.showToast({ title: 'Select two events first', icon: 'none' })
     return
   }
 
   const [firstId, secondId] = selectedMergeIds.value
   const firstEvent = events.value.find(item => item.id === firstId)
   const secondEvent = events.value.find(item => item.id === secondId)
-  const firstLabel = firstEvent?.title || `事件 #${firstId}`
-  const secondLabel = secondEvent?.title || `事件 #${secondId}`
+  const firstLabel = firstEvent?.title || `Event #${firstId}`
+  const secondLabel = secondEvent?.title || `Event #${secondId}`
 
   uni.showActionSheet({
-    itemList: [`保留 ${truncateLabel(firstLabel)}`, `保留 ${truncateLabel(secondLabel)}`],
+    itemList: [`Keep ${truncateLabel(firstLabel)}`, `Keep ${truncateLabel(secondLabel)}`],
     success: async ({ tapIndex }) => {
       const sourceEventId = tapIndex === 0 ? secondId : firstId
       const targetEventId = tapIndex === 0 ? firstId : secondId
       try {
-        uni.showLoading({ title: '合并事件中...', mask: true })
+        uni.showLoading({ title: 'Merging events...', mask: true })
         await governanceApi.mergeEvents({ sourceEventId, targetEventId })
-        uni.showToast({ title: '事件已合并', icon: 'success' })
+        uni.showToast({ title: 'Events merged', icon: 'success' })
         mergeMode.value = false
         selectedMergeIds.value = []
         await resetAndLoad()
       } catch (error) {
-        uni.showToast({ title: error.message || '合并失败', icon: 'none' })
+        uni.showToast({ title: error.message || 'Merge failed', icon: 'none' })
       } finally {
         uni.hideLoading()
       }
@@ -560,14 +560,14 @@ const submitMerge = () => {
 
 const handleClearEvents = () => {
   uni.showModal({
-    title: '清空社区治理事件',
-    content: '这会删除所有社区治理事件、治理信号、快照、证据、事件来源和动作记录，但不会删除帖子、评论、举报等原始业务数据。确认继续吗？',
-    confirmText: '确认清空',
+    title: 'Clear moderation events',
+    content: 'This deletes moderation events, signals, snapshots, evidence, sources, and action logs. Posts, comments, and reports remain. Continue?',
+    confirmText: 'Clear events',
     confirmColor: '#b13a2b',
     success: async (res) => {
       if (!res.confirm) return
       try {
-        uni.showLoading({ title: '清空中...', mask: true })
+        uni.showLoading({ title: 'Clearing...', mask: true })
         const response = await governanceApi.clearEvents()
         currentRun.value = null
         currentRunId.value = ''
@@ -577,11 +577,11 @@ const handleClearEvents = () => {
         stopPolling()
         await resetAndLoad()
         uni.showToast({
-          title: `已清空 ${response.data?.clearedEventCount || 0} 个事件`,
+          title: `Cleared ${response.data?.clearedEventCount || 0} events`,
           icon: 'success'
         })
       } catch (error) {
-        uni.showToast({ title: error.message || '清空失败', icon: 'none' })
+        uni.showToast({ title: error.message || 'Could not clear', icon: 'none' })
       } finally {
         uni.hideLoading()
       }
@@ -613,7 +613,7 @@ const filterLabel = (options, value, fallback) => {
 }
 
 const formatDate = (value) => {
-  if (!value || value === 'null') return '暂无'
+  if (!value || value === 'null') return 'None'
   try {
     const date = new Date(value)
     return `${date.getMonth() + 1}-${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`

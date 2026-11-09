@@ -84,7 +84,7 @@ export const reportComment = async (commentId, reason) => {
   return { code: 200, message: '暂未开通评论举报' };
 };
 
-// 发布帖子
+// Create post
 export const publishPost = async (data) => {
   const images = Array.isArray(data.images) && data.images.length > 0
     ? data.images

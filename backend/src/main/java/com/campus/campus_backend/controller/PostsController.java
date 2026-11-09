@@ -105,7 +105,7 @@ public class PostsController {
         if (category == null) {
             List<Category> all = categoryRepository.findAll();
             if (all.isEmpty()) {
-                throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "分类未配置");
+                throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "No category is configured");
             }
             category = all.get(0);
         }
@@ -186,7 +186,7 @@ public class PostsController {
         pt.setUser(user);
         pt.setAmount(20);
         pt.setType((short) 2);
-        pt.setDescription("发帖奖励");
+        pt.setDescription("Post reward");
         pointTransactionRepository.save(pt);
 
         // 构建返回VO
@@ -259,7 +259,7 @@ public class PostsController {
             User u = p.getUser();
             item.put("userId", u != null ? u.getId() : null);
             String name = u != null && u.getNickname() != null ? u.getNickname()
-                    : (u != null ? u.getUsername() : "匿名用户");
+                    : (u != null ? u.getUsername() : "Anonymous user");
             item.put("userName", name);
             item.put("userAvatar", u != null ? u.getAvatarUrl() : null);
 
@@ -424,7 +424,7 @@ public class PostsController {
         }
 
         postRepository.delete(p);
-        return Result.okMessage("删除成功");
+        return Result.okMessage("Deleted");
     }
 
     @PostMapping("/{postId}/like")
@@ -458,9 +458,9 @@ public class PostsController {
                 notification.setSender(user);
                 notification.setType((short) 1);
                 notification.setPost(post);
-                notification.setContent("赞了你的帖子");
+                notification.setContent("Liked your post");
                 notification.setQuote(post.getContent());
-                notification.setQuoteLabel("我的帖子");
+                notification.setQuoteLabel("My post");
                 notificationRepository.save(notification);
             }
         } else if (!likeAction && existed) {
@@ -593,7 +593,7 @@ public class PostsController {
         cpt.setUser(user);
         cpt.setAmount(10);
         cpt.setType((short) 3);
-        cpt.setDescription("评论奖励");
+        cpt.setDescription("Comment reward");
         pointTransactionRepository.save(cpt);
 
         // 创建评论通知
@@ -603,9 +603,9 @@ public class PostsController {
             notification.setSender(user); // 评论者
             notification.setType((short) 2); // 2-评论类型
             notification.setPost(post);
-            notification.setContent("评论了你的帖子");
+            notification.setContent("Commented on your post");
             notification.setQuote(post.getContent());
-            notification.setQuoteLabel("我的帖子");
+            notification.setQuoteLabel("My post");
             notificationRepository.save(notification);
         }
 
@@ -1008,7 +1008,7 @@ public class PostsController {
         if (Boolean.TRUE.equals(isTop) && !isAdmin) {
             int currentPoints = user.getPoints() != null ? user.getPoints() : 0;
             if (currentPoints < 30) {
-                throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "积分不足，需30积分置顶");
+                throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "30 points are required to pin a post");
             }
 
             user.setPoints(currentPoints - 30);
@@ -1018,7 +1018,7 @@ public class PostsController {
             pt.setUser(user);
             pt.setAmount(-30);
             pt.setType((short) 4);
-            pt.setDescription("帖子置顶消耗");
+            pt.setDescription("Pinned post fee");
             pointTransactionRepository.save(pt);
         }
 

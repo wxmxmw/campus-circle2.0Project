@@ -38,17 +38,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-        // 跳过公开路径，不进行JWT验证
-        String path = request.getRequestURI();
-        // 跳过公开路径，不进行JWT验证
-        if (path.startsWith("/actuator") || path.startsWith("/swagger-ui") ||
-                path.startsWith("/v3/api-docs") || path.startsWith("/webjars") ||
-                path.startsWith("/swagger-resources") ||
-                path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js")) {  // 新增静态资源
-            chain.doFilter(request, response);
-            return;
-        }
-
         String header = request.getHeader("Authorization");
         if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
             String token = header.substring(7);

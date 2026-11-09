@@ -23,6 +23,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -149,10 +150,10 @@ public class GeminiPostAssistService {
                 - JSON shape:
                   {"title":"...","polishedContent":"...","recommendedCategoryId":1,"tags":["...","...","..."]}
                 - recommendedCategoryId must be one of the provided category ids.
-                - title must be Chinese, natural, and no longer than 20 Chinese characters when possible.
+                - Write the title and polishedContent in natural English.
                 - polishedContent should preserve the user's meaning and not invent facts.
                 - Escape line breaks inside JSON strings.
-                - tags should be short Chinese keywords without "#".
+                - tags should be short English keywords without "#".
 
                 Existing categories:
                 %s
@@ -566,32 +567,31 @@ public class GeminiPostAssistService {
             return Optional.empty();
         }
 
+        if (containsAny(text, "吐槽", "无语", "烦死", "崩溃", "离谱", "rant", "frustrat")) {
+            Optional<Category> discussion = findCategoryByKeyword(categories, "Discussion", "\u5410\u69fd");
+            if (discussion.isPresent()) return discussion;
+        }
+
         if (containsAny(text, "谁知道", "请问", "求助", "有人知道", "想问", "怎么办", "?","\uff1f")) {
-            Optional<Category> help = findCategoryByKeyword(categories, "\u6c42\u52a9");
+            Optional<Category> help = findCategoryByKeyword(categories, "Help", "\u6c42\u52a9");
             if (help.isPresent()) {
                 return help;
             }
         }
         if (containsAny(text, "二手", "闲置", "出", "转", "出售", "收", "求购")) {
-            Optional<Category> resale = findCategoryByKeyword(categories, "\u95f2\u7f6e");
+            Optional<Category> resale = findCategoryByKeyword(categories, "Marketplace", "\u95f2\u7f6e");
             if (resale.isPresent()) {
                 return resale;
             }
         }
         if (containsAny(text, "投票", "选哪个", "大家选", "二选一")) {
-            Optional<Category> vote = findCategoryByKeyword(categories, "\u6295\u7968");
+            Optional<Category> vote = findCategoryByKeyword(categories, "Polls", "\u6295\u7968");
             if (vote.isPresent()) {
                 return vote;
             }
         }
-        if (containsAny(text, "吐槽", "无语", "烦死", "崩溃", "离谱")) {
-            Optional<Category> rant = findCategoryByKeyword(categories, "\u5410\u69fd");
-            if (rant.isPresent()) {
-                return rant;
-            }
-        }
         if (containsAny(text, "放假", "课程", "上课", "食堂", "宿舍", "图书馆", "校园", "期末")) {
-            Optional<Category> campusLife = findCategoryByKeyword(categories, "\u65e5\u5e38\u751f\u6d3b");
+            Optional<Category> campusLife = findCategoryByKeyword(categories, "Daily Life", "\u65e5\u5e38\u751f\u6d3b");
             if (campusLife.isPresent()) {
                 return campusLife;
             }
@@ -599,9 +599,10 @@ public class GeminiPostAssistService {
         return Optional.empty();
     }
 
-    private Optional<Category> findCategoryByKeyword(List<Category> categories, String keyword) {
+    private Optional<Category> findCategoryByKeyword(List<Category> categories, String... keywords) {
         return categories.stream()
-                .filter(category -> Objects.toString(category.getName(), "").contains(keyword))
+                .filter(category -> Arrays.stream(keywords).anyMatch(keyword ->
+                        Objects.toString(category.getName(), "").contains(keyword)))
                 .findFirst();
     }
 

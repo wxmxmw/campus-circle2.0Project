@@ -58,7 +58,7 @@ public class ErrandsController {
         if (req.getCurrency() == 1) {
             int currentPoints = user.getPoints() != null ? user.getPoints() : 0;
             if (currentPoints < req.getBounty()) {
-                throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "积分不足");
+                throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Insufficient points");
             }
 
             // 扣除积分
@@ -70,7 +70,7 @@ public class ErrandsController {
             pt.setUser(user);
             pt.setAmount(-req.getBounty());
             pt.setType((short) 5);
-            pt.setDescription("发布跑腿需求");
+            pt.setDescription("Posted an errand");
             pointTransactionRepository.save(pt);
         }
 
@@ -100,7 +100,7 @@ public class ErrandsController {
         data.put("status", errand.getStatus());
         data.put("createTime", errand.getCreatedAt());
 
-        return Result.ok("发布成功", data);
+        return Result.ok("Published", data);
     }
 
     @GetMapping
@@ -177,18 +177,18 @@ public class ErrandsController {
 
         // 检查跑腿状态 - 只有待接单状态才能接单
         if (errand.getStatus() != 0) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "跑腿已被接单或已完成");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Errand is unavailable");
         }
 
         // 检查发布者信息，进行null检查
         User publisher = errand.getPublisher();
         if (publisher == null) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "跑腿信息不完整");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Errand details are incomplete");
         }
 
         // 不能接自己的单
         if (publisher.getId().equals(runner.getId())) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "不能接自己的跑腿");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "You cannot accept your own errand");
         }
 
         // 更新跑腿状态和跑腿员
@@ -206,7 +206,7 @@ public class ErrandsController {
             pt.setUser(runner);
             pt.setAmount(errand.getBounty().intValue());
             pt.setType((short) 6); // errandincome类型
-            pt.setDescription("完成跑腿任务");
+            pt.setDescription("Completed an errand");
             pointTransactionRepository.save(pt);
         }
 
@@ -218,7 +218,7 @@ public class ErrandsController {
         data.put("runnerName", errand.getRunner().getNickname() != null ?
                 errand.getRunner().getNickname() : errand.getRunner().getUsername());
 
-        return Result.ok("接单成功", data);
+        return Result.ok("Errand accepted", data);
     }
 
     @PostMapping("/{id}/complete")
@@ -238,23 +238,23 @@ public class ErrandsController {
 
         // 检查跑腿状态 - 只有进行中状态才能完成
         if (errand.getStatus() != 1) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "跑腿状态不正确，无法完成");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Errand cannot be completed in its current state");
         }
 
         // 检查发布者信息，进行null检查
         User errandPublisher = errand.getPublisher();
         if (errandPublisher == null) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "跑腿信息不完整");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Errand details are incomplete");
         }
 
-        // 只有发布者可以确认完成
+        // Only the publisher can confirm completion
         if (!errandPublisher.getId().equals(publisher.getId())) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "只有发布者可以确认完成");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Only the publisher can confirm completion");
         }
 
         // 检查是否有跑腿员
         if (errand.getRunner() == null) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "跑腿尚未被接单");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Errand has not been accepted");
         }
 
         // 更新跑腿状态为已完成
@@ -268,7 +268,7 @@ public class ErrandsController {
         data.put("status", errand.getStatus());
         data.put("completedAt", errand.getCompletedAt());
 
-        return Result.ok("确认完成成功", data);
+        return Result.ok("Completion confirmed", data);
     }
 
     @PostMapping("/{id}/cancel")
@@ -288,18 +288,18 @@ public class ErrandsController {
 
         // 检查跑腿状态 - 只有待接单状态才能取消
         if (errand.getStatus() != 0) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "跑腿已被接单，无法取消");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Accepted errands cannot be cancelled");
         }
 
         // 检查发布者信息，进行null检查
         User errandPublisher = errand.getPublisher();
         if (errandPublisher == null) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "跑腿信息不完整");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Errand details are incomplete");
         }
 
         // 只有发布者可以取消
         if (!errandPublisher.getId().equals(publisher.getId())) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "只有发布者可以取消跑腿");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Only the publisher can cancel an errand");
         }
 
         // 更新跑腿状态为已取消
@@ -317,7 +317,7 @@ public class ErrandsController {
             pt.setUser(publisher);
             pt.setAmount(errand.getBounty().intValue());
             pt.setType((short) 5);
-            pt.setDescription("取消跑腿退还赏金");
+            pt.setDescription("Refunded errand reward");
             pointTransactionRepository.save(pt);
         }
 
@@ -339,7 +339,7 @@ public class ErrandsController {
         // 检查发布者信息，进行null检查
         User publisher = errand.getPublisher();
         if (publisher == null) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "跑腿信息不完整");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Errand details are incomplete");
         }
 
         // 构建符合API规范的响应数据
@@ -360,7 +360,9 @@ public class ErrandsController {
         data.put("deliveryAddr", errand.getDeliveryAddr());
         data.put("bounty", errand.getBounty());
         data.put("status", errand.getStatus());
-        data.put("hiddenInfo", errand.getHiddenInfo());
+        boolean canViewHiddenInfo = principal.getUsername().equals(publisher.getUsername())
+                || (errand.getRunner() != null && principal.getUsername().equals(errand.getRunner().getUsername()));
+        data.put("hiddenInfo", canViewHiddenInfo ? errand.getHiddenInfo() : null);
         data.put("createTime", errand.getCreatedAt());
 
         // 返回跑腿员ID而不是完整对象

@@ -96,7 +96,7 @@ public class InfoCenterController {
     @DeleteMapping("/info-center/comments/{commentId}")
     public Result<Object> deleteComment(@PathVariable Long commentId, @AuthenticationPrincipal UserDetails principal) {
         infoCenterService.deleteNoticeComment(commentId, requireUser(principal));
-        return Result.okMessage("删除成功");
+        return Result.okMessage("Deleted");
     }
 
     @PostMapping("/info-center/comments/{commentId}/like")

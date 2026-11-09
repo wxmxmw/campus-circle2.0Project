@@ -1,5 +1,4 @@
 // api/index.js
-import { delay, topicsData, categoriesData, postsData } from '@/mock/index.js';
 import request from '@/utils/request';
 
 /**
@@ -15,9 +14,6 @@ export const getHotTopics = async () => {
  * 获取分类列表
  */
 export const getCategories = async () => {
-  // 如果后端未提供分类接口，可临时走 Mock
-  // await delay(100);
-  // return { code: 200, data: categoriesData, message: 'success' };
   const res = await request.get('/categories');
   return res;
 };
@@ -32,7 +28,7 @@ export const getPosts = async (params = {}) => {
 };
 
 /**
- * 点赞/取消点赞
+ * Likes/取消点赞
  * @param {Number} postId 
  * @param {Boolean} isLike 
  */

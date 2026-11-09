@@ -4,59 +4,59 @@
 	    <text>←</text> <!-- 这里可以用 "←" 或者 "✕" -->
 	  </view>
     <view class="header">
-      <text class="title">注册账号</text>
-      <text class="sub-title">加入码住校园圈，开启校园生活</text>
+      <text class="title">Create an account</text>
+      <text class="sub-title">Join Campus Circle and explore campus life</text>
     </view>
 
     <view class="form-box">
-      <!-- 用户名 -->
+      <!-- Username -->
       <view class="input-item">
-        <text class="label">用户名</text>
-        <input 
-          class="input" 
-          v-model="form.username" 
-          placeholder="请输入用户名" 
+        <text class="label">Username</text>
+        <input
+          class="input"
+          v-model="form.username"
+          placeholder="Enter a username"
         />
       </view>
 
       <!-- 邮箱 -->
       <view class="input-item">
-        <text class="label">校园邮箱</text>
-        <input 
-          class="input" 
-          v-model="form.email" 
-          placeholder="test@univ.edu.cn" 
-        />
-      </view>
-      
-      <!-- 密码 -->
-      <view class="input-item">
-        <text class="label">设置密码</text>
-        <input 
-          class="input" 
-          v-model="form.password" 
-          password 
-          placeholder="请输入密码" 
+        <text class="label">Campus email</text>
+        <input
+          class="input"
+          v-model="form.email"
+          placeholder="test@univ.edu.cn"
         />
       </view>
 
-      <!-- 确认密码 -->
+      <!-- Password -->
       <view class="input-item">
-        <text class="label">确认密码</text>
-        <input 
-          class="input" 
-          v-model="form.confirmPassword" 
-          password 
-          placeholder="请再次输入密码" 
+        <text class="label">Create password</text>
+        <input
+          class="input"
+          v-model="form.password"
+          password
+          placeholder="Enter your password"
+        />
+      </view>
+
+      <!-- Confirm password -->
+      <view class="input-item">
+        <text class="label">Confirm password</text>
+        <input
+          class="input"
+          v-model="form.confirmPassword"
+          password
+          placeholder="Confirm your password"
         />
       </view>
 
       <button class="submit-btn" :loading="loading" @click="handleRegister">
-        立即注册
+        Sign up
       </button>
 
       <view class="actions">
-        <text class="link" @click="goLogin">已有账号? 去登录</text>
+        <text class="link" @click="goLogin">Already have an account? Sign in</text>
       </view>
     </view>
   </view>
@@ -78,34 +78,34 @@ const form = reactive({
 const handleRegister = async () => {
   // 1. 基础校验
   if (!form.username || !form.email || !form.password) {
-    return uni.showToast({ title: '请补全注册信息', icon: 'none' })
+    return uni.showToast({ title: 'Complete all registration fields', icon: 'none' })
   }
   if (form.password !== form.confirmPassword) {
-    return uni.showToast({ title: '两次密码输入不一致', icon: 'none' })
+    return uni.showToast({ title: 'Passwords do not match', icon: 'none' })
   }
 
   loading.value = true
   try {
     // 2. 调用真实 API
     const res = await userApi.register(form)
-    
+
     if (res.code === 200) {
-      uni.showToast({ title: '注册成功', icon: 'success' })
+      uni.showToast({ title: 'Account created', icon: 'success' })
       // 延迟跳转回登录页
       setTimeout(() => {
         uni.navigateBack()
       }, 1500)
     }
   } catch (error) {
-    // 错误已经在 request.js 中通过 toast 提示了，这里可以不做处理或打日志
-    console.error('注册失败', error)
+    // 错误已经在 request.js 中通过 toast Notice了，这里可以不做处理或打志
+    console.error('Registration failed', error)
   } finally {
     loading.value = false
   }
 }
 const goBack = () => {
   const pages = getCurrentPages()
-  // 如果页面栈大于1，说明有上一页，直接返回
+  // 如果页面栈大于1，说明有上一页，直接Back
   if (pages.length > 1) {
     uni.navigateBack()
   } else {
@@ -130,8 +130,8 @@ const goLogin = () => {
 .input { height: 80rpx; font-size: 32rpx; }
 
 .submit-btn {
-  background: #1890FF; /* 注册按钮用蓝色区分一下 */
-  color: #fff; border-radius: 50rpx; 
+  background: #1890FF; /* 注册By钮用蓝色区分一下 */
+  color: #fff; border-radius: 50rpx;
   margin-top: 60rpx; font-size: 32rpx; font-weight: bold;
 }
 .submit-btn:active { opacity: 0.9; }
@@ -143,7 +143,7 @@ const goLogin = () => {
   top: 0;
   left: 0;
   z-index: 100;
-  /* 避开手机状态栏高度，再加一点间距 */
+  /* 避开手机Status栏高度，再加一点间距 */
   padding-top: calc(var(--status-bar-height) + 20rpx);
   padding-left: 30rpx;
   padding-right: 30rpx;

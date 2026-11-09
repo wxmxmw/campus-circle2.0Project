@@ -13,18 +13,21 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
     @ExceptionHandler(BizException.class)
     public ResponseEntity<Result<Void>> handleBiz(BizException ex) {
-        return ResponseEntity.status(HttpStatus.OK).body(Result.fail(ex.getCode(), ex.getMessage()));
+        HttpStatus status = HttpStatus.resolve(ex.getCode());
+        return ResponseEntity.status(status == null ? HttpStatus.INTERNAL_SERVER_ERROR : status)
+                .body(Result.fail(ex.getCode(), ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Result<Void>> handleValidation(MethodArgumentNotValidException ex) {
         String msg = ex.getBindingResult().getFieldError() != null ? ex.getBindingResult().getFieldError().getDefaultMessage() : ErrorCode.BAD_REQUEST.getMessage();
-        return ResponseEntity.status(HttpStatus.OK).body(Result.fail(ErrorCode.BAD_REQUEST, msg));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.fail(ErrorCode.BAD_REQUEST, msg));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Result<Void>> handleOther(Exception ex) {
-        return ResponseEntity.status(HttpStatus.OK).body(Result.fail(ErrorCode.SERVER_ERROR, ErrorCode.SERVER_ERROR.getMessage()));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Result.fail(ErrorCode.SERVER_ERROR, ErrorCode.SERVER_ERROR.getMessage()));
     }
 }
 

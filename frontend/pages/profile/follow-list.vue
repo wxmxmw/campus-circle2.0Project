@@ -7,7 +7,7 @@
         <view class="back-btn" @click="goBack">
           <text class="back-arrow">←</text>
         </view>
-        <text class="page-title">{{ type === 'followers' ? '粉丝列表' : '关注列表' }}</text>
+        <text class="page-title">{{ type === 'followers' ? 'Followers' : 'Following' }}</text>
       </view>
     </view>
 
@@ -26,11 +26,11 @@
         
         <view class="info">
           <text class="name">{{ user.nickname || user.username }}</text>
-          <text class="bio">{{ user.bio || '暂无介绍' }}</text>
+          <text class="bio">{{ user.bio || 'No bio' }}</text>
         </view>
         
         <view class="btn-box" @click.stop>
-          <!-- 🔥 修改处：只有登录 且 不是自己 时才显示按钮 -->
+          <!-- 🔥 修改处：只有登录 且 不是自己 时才显示By钮 -->
           <button 
             v-if="userStore.isLoggedIn && String(user.id) !== String(userStore.userInfo?.id)"
             class="action-btn" 
@@ -42,7 +42,7 @@
         </view>
       </view>
       
-      <view v-if="list.length === 0" class="empty">暂无数据</view>
+      <view v-if="list.length === 0" class="empty">No results</view>
     </view>
   </view>
 </template>
@@ -104,9 +104,9 @@ const goToUserHome = (id) => {
 
 const getBtnText = (user) => {
   if (user.isFollowing) {
-    return type.value === 'followers' ? '互相关注' : '已关注'
+    return type.value === 'followers' ? 'Mutual follow' : 'Following'
   }
-  return type.value === 'followers' ? '回粉' : '关注'
+  return type.value === 'followers' ? 'Follow back' : 'Following'
 }
 
 const toggleFollow = async (user) => {
@@ -120,9 +120,9 @@ const toggleFollow = async (user) => {
     await userApi.toggleFollow(user.id, newStatus)
     user.isFollowing = newStatus
     
-    uni.showToast({ title: newStatus ? '关注成功' : '已取消', icon: 'none' })
+    uni.showToast({ title: newStatus ? 'Followed' : 'Cancelled', icon: 'none' })
   } catch (e) {
-    uni.showToast({ title: '操作失败', icon: 'none' })
+    uni.showToast({ title: 'Action failed', icon: 'none' })
   }
 }
 </script>

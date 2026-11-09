@@ -1,13 +1,13 @@
 <template>
   <view class="publish-container">
-    <!-- 需求描述 -->
+    <!-- Description -->
     <view class="form-group">
       <view class="form-item">
-        <text class="label">需求描述</text>
-        <textarea 
-          class="textarea" 
-          v-model="form.content" 
-          placeholder="例如：帮我去南门拿个快递，取件码是..." 
+        <text class="label">Description</text>
+        <textarea
+          class="textarea"
+          v-model="form.content"
+          placeholder="For example: Pick up a parcel at the south gate..."
         />
       </view>
     </view>
@@ -15,38 +15,38 @@
     <!-- 地址信息 -->
     <view class="form-group">
       <view class="form-item">
-        <text class="label">取货/办事地</text>
-        <input class="input" v-model="form.pickupAddr" placeholder="哪里取?" />
+        <text class="label">Pickup location</text>
+        <input class="input" v-model="form.pickupAddr" placeholder="Where should it be picked up?" />
       </view>
       <view class="form-item">
-        <text class="label">送达地点</text>
-        <input class="input" v-model="form.deliveryAddr" placeholder="送到哪?" />
+        <text class="label">Delivery location</text>
+        <input class="input" v-model="form.deliveryAddr" placeholder="Where should it go?" />
       </view>
     </view>
 
     <!-- 隐私信息 -->
     <view class="form-group">
       <view class="form-item">
-        <text class="label">隐私信息 (接单后可见)</text>
-        <input class="input" v-model="form.hiddenInfo" placeholder="如: 取件码 12-34-56" />
+        <text class="label">Private details (shown after acceptance)</text>
+        <input class="input" v-model="form.hiddenInfo" placeholder="For example: pickup code 12-34-56" />
       </view>
     </view>
-    
-    <!-- 截止时间 -->
+
+    <!-- Due time -->
     <view class="form-group">
       <picker mode="date" :start="startDate" @change="bindDateChange">
         <view class="form-item row">
-          <text class="label">截止日期</text>
+          <text class="label">Due date</text>
           <view class="picker-val">
-            {{ form.deadlineDate || '请选择日期' }} >
+            {{ form.deadlineDate || 'Select a date' }} >
           </view>
         </view>
       </picker>
       <picker mode="time" @change="bindTimeChange">
         <view class="form-item row">
-          <text class="label">截止时间</text>
+          <text class="label">Due time</text>
           <view class="picker-val">
-             {{ form.deadlineTime || '请选择时间' }} >
+             {{ form.deadlineTime || 'Select a time' }} >
           </view>
         </view>
       </picker>
@@ -55,32 +55,32 @@
     <!-- 悬赏设置 (重点) -->
     <view class="form-group">
       <view class="form-item">
-        <text class="label">支付方式</text>
+        <text class="label">Payment method</text>
         <radio-group @change="handleCurrencyChange" class="radio-group">
           <label class="radio-label">
             <radio value="1" color="#3f3f3f" :checked="form.currency === 1" />
-            <text>积分支付</text>
-            <text class="balance">(余额: {{ userStore.userInfo?.points || 0 }})</text>
+            <text>Pay with points</text>
+            <text class="balance">(Balance: {{ userStore.userInfo?.points || 0 }})</text>
           </label>
           <label class="radio-label">
             <radio value="2" color="#5a5a5a" :checked="form.currency === 2" />
-            <text>现金支付 (¥)</text>
+            <text>Pay in cash (¥)</text>
           </label>
         </radio-group>
       </view>
 
       <view class="form-item">
-        <text class="label">{{ form.currency === 1 ? '悬赏积分 (分)' : '悬赏金额 (元)' }}</text>
-        <input 
-          class="input price" 
-          type="digit" 
-          v-model="form.bounty" 
-          :placeholder="form.currency === 1 ? '输入积分数' : '0.00'" 
+        <text class="label">{{ form.currency === 1 ? 'Reward (points)' : 'Reward (CNY)' }}</text>
+        <input
+          class="input price"
+          type="digit"
+          v-model="form.bounty"
+          :placeholder="form.currency === 1 ? 'Enter points' : '0.00'"
         />
       </view>
     </view>
 
-    <button class="submit-btn" @click="handleSubmit" :loading="loading">立即发布</button>
+    <button class="submit-btn" @click="handleSubmit" :loading="loading">Publish</button>
   </view>
 </template>
 
@@ -92,7 +92,7 @@ import { useUserStore } from '@/stores/user'
 const userStore = useUserStore()
 const loading = ref(false)
 
-// 获取当前日期作为 Picker 最小值
+// 获取当前期作为 Picker 最小值
 const startDate = new Date().toISOString().slice(0, 10)
 
 const form = reactive({
@@ -101,7 +101,7 @@ const form = reactive({
   deliveryAddr: '',
   hiddenInfo: '',
   bounty: '',
-  currency: 1, // 默认 1-积分
+  currency: 1, // 默认 1-points
   deadlineDate: '',
   deadlineTime: ''
 })
@@ -115,12 +115,12 @@ const bindDateChange = (e) => form.deadlineDate = e.detail.value
 const bindTimeChange = (e) => form.deadlineTime = e.detail.value
 
 const handleSubmit = async () => {
-  if (!form.content || !form.bounty) return uni.showToast({ title: '请填写完整信息', icon: 'none' })
-  if (!form.deadlineDate || !form.deadlineTime) return uni.showToast({ title: '请设置截止时间', icon: 'none' })
-  
-  // 校验积分余额
+  if (!form.content || !form.bounty) return uni.showToast({ title: 'Complete all fields', icon: 'none' })
+  if (!form.deadlineDate || !form.deadlineTime) return uni.showToast({ title: 'Set a due time', icon: 'none' })
+
+  // 校验pointsBalance
   if (form.currency === 1 && parseInt(form.bounty) > (userStore.userInfo?.points || 0)) {
-    return uni.showToast({ title: '积分余额不足', icon: 'none' })
+    return uni.showToast({ title: 'Insufficient points', icon: 'none' })
   }
 
   // 构造 API 需要的格式
@@ -131,27 +131,27 @@ const handleSubmit = async () => {
     // 确保数字类型
     bounty: parseFloat(form.bounty)
   }
-  
+
   loading.value = true
   try {
     const res = await errandApi.create(submitData)
     if (res.code === 200) {
-      uni.showToast({ title: '发布成功' })
-      
-      // 如果是积分支付，手动扣除本地 Store 的积分，保持 UI 同步
+      uni.showToast({ title: 'Post published' })
+
+      // 如果是Pay with points，手动扣除本地 Store 的points，保持 UI 同步
       if (form.currency === 1) {
         userStore.updateUserInfo({
           points: userStore.userInfo.points - parseInt(form.bounty)
         })
       }
-      
+
       setTimeout(() => {
-        // 发布成功后，返回大厅
+        // Post published后，Back大厅
         uni.switchTab({ url: '/pages/errand/index' })
       }, 1000)
     }
   } catch (error) {
-    uni.showToast({ title: error.message || '发布失败', icon: 'none' })
+    uni.showToast({ title: error.message || 'Publishing failed', icon: 'none' })
   } finally {
     loading.value = false
   }

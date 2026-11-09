@@ -82,7 +82,7 @@ public class NotificationController {
         }
         conversationRepository.save(conversation);
 
-        return Result.ok("标记成功");
+        return Result.ok("Marked");
     }
 
     // 6.3 标记通知已读
@@ -110,7 +110,7 @@ public class NotificationController {
         notification.setIsRead(true);
         notificationRepository.save(notification);
 
-        return Result.ok("标记成功");
+        return Result.ok("Marked");
     }
 
     // 6.4 获取私聊列表
@@ -299,7 +299,7 @@ public class NotificationController {
         data.put("time", message.getCreatedAt().atZone(zone).format(dtf));
         data.put("status", message.getStatus());
 
-        return Result.ok("发送成功", data);
+        return Result.ok("Sent", data);
     }
 
     @GetMapping("/notifications")
@@ -361,11 +361,11 @@ public class NotificationController {
 
     private String getTypeText(short type) {
         return switch (type) {
-            case 1 -> "赞了你的帖子";
-            case 2 -> "评论了你的帖子";
-            case 3 -> "回复了你的评论";
-            case 4 -> "关注了你";
-            default -> "未知通知";
+            case 1 -> "Liked your post";
+            case 2 -> "Commented on your post";
+            case 3 -> "Replied to your comment";
+            case 4 -> "Followed you";
+            default -> "Unknown notification";
         };
     }
 

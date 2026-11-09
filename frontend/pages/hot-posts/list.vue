@@ -1,8 +1,8 @@
 <template>
   <view class="hot-posts-page">
     <view class="nav-bar">
-      <text class="back-btn" @click="goBack">返回</text>
-      <text class="nav-title">热门帖子</text>
+      <text class="back-btn" @click="goBack">Back</text>
+      <text class="nav-title">Popular posts</text>
       <view class="right-placeholder"></view>
     </view>
 
@@ -21,7 +21,7 @@
           </view>
 
           <view class="post-meta">
-            <text class="post-views">浏览 {{ post.viewsText || post.views || 0 }}</text>
+            <text class="post-views">Views {{ post.viewsText || post.views || 0 }}</text>
           </view>
         </view>
       </view>
@@ -69,7 +69,7 @@ export default {
     },
     displayTitle(post) {
       const raw = (post?.title || '').trim()
-      if (!raw) return '未命名帖子'
+      if (!raw) return 'Untitled post'
       return raw.length > 25 ? raw.slice(0, 25) + '...' : raw
     },
     goBack() {
@@ -77,7 +77,7 @@ export default {
     },
     goDetail(post) {
       if (!post?.id) {
-        uni.showToast({ title: '帖子数据异常', icon: 'none' })
+        uni.showToast({ title: 'Invalid post data', icon: 'none' })
         return
       }
       uni.navigateTo({

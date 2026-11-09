@@ -2,6 +2,14 @@
 .DS_Store
 Thumbs.db
 .idea/
+.vscode/
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+*.p12
+*.pfx
 
 # Backend runtime
 backend/target/

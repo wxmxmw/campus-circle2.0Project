@@ -1,7 +1,4 @@
 {
-  "devDependencies": {
-    "better-mock": "^0.3.7"
-  },
   "dependencies": {
     "pinia": "^3.0.4"
   }

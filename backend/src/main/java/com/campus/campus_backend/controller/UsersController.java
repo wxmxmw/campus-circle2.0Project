@@ -7,7 +7,6 @@ import com.campus.campus_backend.domain.User;
 import com.campus.campus_backend.domain.UserFollow;
 import com.campus.campus_backend.repository.UserRepository;
 import com.campus.campus_backend.dto.UpdateProfileRequest;
-import com.campus.campus_backend.dto.PointsChangeRequest;
 import com.campus.campus_backend.vo.UserProfileVO;
 import com.campus.campus_backend.vo.PostItemVO;
 import com.campus.campus_backend.vo.PostStatsVO;
@@ -149,48 +148,6 @@ public class UsersController {
         return Result.ok(vo);
     }
 
-    @PostMapping("/me/points")
-    @Transactional
-    public Result<java.util.Map<String, Integer>> changePoints(@AuthenticationPrincipal UserDetails principal,
-            @Validated @RequestBody PointsChangeRequest req) {
-        if (principal == null) {
-            throw new BizException(ErrorCode.UNAUTHORIZED);
-        }
-        if (req.getAmount() == null || req.getAmount() == 0) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "amount invalid");
-        }
-        short tp = mapType(req.getType());
-        User u = userRepository.findByUsername(principal.getUsername())
-                .orElseThrow(() -> new BizException(ErrorCode.UNAUTHORIZED));
-        int newPoints = u.getPoints() + req.getAmount();
-        u.setPoints(newPoints);
-        userRepository.save(u);
-        PointTransaction pt = new PointTransaction();
-        pt.setUser(u);
-        pt.setAmount(req.getAmount());
-        pt.setType(tp);
-        pt.setDescription(req.getDescription());
-        pointTransactionRepository.save(pt);
-        java.util.Map<String, Integer> data = new java.util.HashMap<>();
-        data.put("currentPoints", u.getPoints());
-        return Result.ok(data);
-    }
-
-    private short mapType(String type) {
-        if (type == null)
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "type required");
-        String t = type.trim().toLowerCase();
-        return switch (t) {
-            case "signin" -> 1;
-            case "postreward" -> 2;
-            case "commentreward" -> 3;
-            case "topconsume" -> 4;
-            case "errandpay" -> 5;
-            case "errandincome" -> 6;
-            default -> throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "type invalid");
-        };
-    }
-
     @GetMapping("/me/posts")
     public Result<Object> myPosts(@AuthenticationPrincipal UserDetails principal,
             @RequestParam(defaultValue = "1") int page,
@@ -302,7 +259,7 @@ public class UsersController {
         pt.setUser(u);
         pt.setAmount(gained);
         pt.setType((short) 1);
-        pt.setDescription("每日签到");
+        pt.setDescription("Daily check-in");
         pointTransactionRepository.save(pt);
         java.util.Map<String, Integer> data = new java.util.LinkedHashMap<>();
         data.put("points", gained);
@@ -559,14 +516,14 @@ public class UsersController {
         User targetUser = userRepository.findById(id)
                 .orElseThrow(() -> new BizException(ErrorCode.NOT_FOUND));
 
-        // 不能关注自己
+        // You cannot follow yourself
         if (currentUser.getId().equals(targetUser.getId())) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "不能关注自己");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "You cannot follow yourself");
         }
 
         // 检查是否已关注
         if (userFollowRepository.existsByFollowerIdAndFollowingId(currentUser.getId(), targetUser.getId())) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "已经关注该用户");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "You already follow this user");
         }
 
         // 创建关注关系
@@ -575,7 +532,7 @@ public class UsersController {
         follow.setFollowing(targetUser);
         userFollowRepository.save(follow);
 
-        return Result.okMessage("关注成功");
+        return Result.okMessage("Followed");
     }
 
     @DeleteMapping("/{id}/follow")
@@ -595,7 +552,7 @@ public class UsersController {
         // 删除关注关系
         userFollowRepository.deleteByFollowerIdAndFollowingId(currentUser.getId(), targetUser.getId());
 
-        return Result.okMessage("取消关注成功");
+        return Result.okMessage("Unfollowed");
     }
 
     @GetMapping("/me/errands")
@@ -707,7 +664,7 @@ public class UsersController {
                 }
             } catch (Exception e) {
                 // 解析失败就给个空列表，不要报错
-                System.err.println("图片JSON解析失败 ID:" + p.getId());
+                System.err.println("Could not parse image JSON for ID: " + p.getId());
             }
             item.setImages(imgs);
 
@@ -738,12 +695,12 @@ public class UsersController {
                     item.setAuthor(author);
                 } else {
                     // 如果数据库里 user_id 对应的用户被删了
-                    item.setAuthor(new com.campus.campus_backend.vo.AuthorVO(0L, "用户已注销", ""));
+                    item.setAuthor(new com.campus.campus_backend.vo.AuthorVO(0L, "Deleted user", ""));
                 }
             } catch (Exception e) {
                 // ⚠️ 捕获所有懒加载异常，返回默认用户
-                System.err.println("获取作者信息失败 (可能是懒加载问题): " + e.getMessage());
-                item.setAuthor(new com.campus.campus_backend.vo.AuthorVO(0L, "未知用户", ""));
+                System.err.println("Could not load author: " + e.getMessage());
+                item.setAuthor(new com.campus.campus_backend.vo.AuthorVO(0L, "Unknown user", ""));
             }
 
             // --- 统计数据处理 (空值转0) ---

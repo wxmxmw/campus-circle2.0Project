@@ -1,23 +1,10 @@
 import { getApiBaseUrl } from '@/utils/api'
 
-let useMock = false
-
-const mockUrl = '/api'
 const timeout = 30000
 const tokenKey = 'token'
 
-if (useMock) {
-  // #ifdef H5
-  import('@/mock/index.js')
-  // #endif
-
-  // #ifdef MP || APP-PLUS
-  require('@/mock/index.js')
-  // #endif
-}
-
 const getBaseUrl = () => {
-  return useMock ? mockUrl : getApiBaseUrl()
+  return getApiBaseUrl()
 }
 
 const requestInterceptor = (config) => {
@@ -94,11 +81,16 @@ const responseInterceptor = (response) => {
     return Promise.reject(new Error('Unauthorized'))
   }
 
+  if (statusCode === 403) {
+    uni.showToast({ title: data?.message || 'Forbidden', icon: 'none' })
+    return Promise.reject(new Error(data?.message || 'Forbidden'))
+  }
+
   uni.showToast({
-    title: `Request error ${statusCode}`,
+    title: data?.message || `Request error ${statusCode}`,
     icon: 'none'
   })
-  return Promise.reject(new Error(`HTTP ${statusCode}`))
+  return Promise.reject(new Error(data?.message || `HTTP ${statusCode}`))
 }
 
 const executeRequest = (config, resolve, reject) => {
@@ -181,17 +173,6 @@ export const del = (url, data = {}, config = {}) => {
 
 export const upload = (filePath, data = {}) => {
   return new Promise((resolve, reject) => {
-    if (useMock) {
-      setTimeout(() => {
-        resolve({
-          url: `https://picsum.photos/400/600?random=${Date.now()}`,
-          width: 400,
-          height: 600
-        })
-      }, 500)
-      return
-    }
-
     const token = uni.getStorageSync(tokenKey)
 
     uni.uploadFile({
@@ -238,11 +219,4 @@ export const getToken = () => {
 
 export const removeToken = () => {
   uni.removeStorageSync(tokenKey)
-}
-
-export const toggleMock = (enabled) => {
-  if (process.env.NODE_ENV === 'development') {
-    useMock = enabled
-    console.log(`mock mode: ${enabled ? 'on' : 'off'}`)
-  }
 }

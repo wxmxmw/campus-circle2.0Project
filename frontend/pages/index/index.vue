@@ -209,7 +209,7 @@ export default {
     },
     handleTopicClick(post) {
       if (!post?.id) {
-        uni.showToast({ title: '帖子数据异常', icon: 'none' });
+        uni.showToast({ title: 'Invalid post data', icon: 'none' });
         return;
       }
       uni.navigateTo({ url: `/pages/post/detail?id=${post.id}` });

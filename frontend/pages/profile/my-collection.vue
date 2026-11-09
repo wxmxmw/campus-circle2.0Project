@@ -3,17 +3,17 @@
     <!-- 自定义导航 -->
     <view class="nav-header">
       <view class="back-btn" @click="goBack">←</view>
-      <text class="title">我的收藏</text>
+      <text class="title">Saved posts</text>
     </view>
     
     <!-- 列表内容 -->
     <scroll-view scroll-y class="list-container" @scrolltolower="loadMore">
-      <!-- 加载中且列表为空 -->
-      <view v-if="loading && list.length === 0" class="loading-state">加载中...</view>
+      <!-- Loading且列表为空 -->
+      <view v-if="loading && list.length === 0" class="loading-state">Loading...</view>
       
-      <!-- 空状态 -->
+      <!-- 空Status -->
       <view v-else-if="!loading && list.length === 0" class="empty-state">
-        <text>暂无收藏内容</text>
+        <text>No saved posts</text>
       </view>
 
       <!-- 列表项 -->
@@ -27,7 +27,7 @@
         <view class="post-header">
           <!-- 这里的 item.author 可能为 null，加个判断防止报错 -->
           <image :src="item.author?.avatar || '/static/logo.png'" class="avatar" mode="aspectFill" />
-          <text class="nickname">{{ item.author?.nickname || '未知用户' }}</text>
+          <text class="nickname">{{ item.author?.nickname || 'Unknown user' }}</text>
           <text class="time">{{ formatTime(item.createTime) }}</text>
         </view>
         
@@ -39,14 +39,14 @@
         </view>
         
         <view class="post-footer">
-          <text>浏览 {{ item.stats?.views || 0 }}</text>
-          <text>收藏于 {{ formatTime(item.collectedAt) }}</text>
+          <text>Views {{ item.stats?.views || 0 }}</text>
+          <text>Saved on {{ formatTime(item.collectedAt) }}</text>
         </view>
       </view>
       
-      <!-- 底部状态 -->
-      <view v-if="loading && list.length > 0" class="loading-more">加载更多...</view>
-      <view v-if="!hasMore && list.length > 0" class="no-more">没有更多了</view>
+      <!-- 底部Status -->
+      <view v-if="loading && list.length > 0" class="loading-more">Loading more...</view>
+      <view v-if="!hasMore && list.length > 0" class="no-more">No more items</view>
     </scroll-view>
   </view>
 </template>
@@ -71,12 +71,12 @@ const fetchData = async () => {
   loading.value = true
   
   try {
-    console.log('开始请求我的收藏，页码:', page.value)
+    console.log('Started请求Saved posts，页码:', page.value)
     
     // 调用 API
     const res = await userApi.getMyCollections({ page: page.value, size: 10 })
     
-    console.log('收藏列表返回:', res) // 调试点 1
+    console.log('收藏列表Back:', res) // 调试点 1
 
     if (res.code === 200) {
       const newItems = (res.data.list || []).map((item) => ({
@@ -103,11 +103,11 @@ const fetchData = async () => {
         page.value++
       }
     } else {
-      uni.showToast({ title: res.message || '获取失败', icon: 'none' })
+      uni.showToast({ title: res.message || 'Could not load', icon: 'none' })
     }
   } catch (e) {
     console.error('获取收藏列表报错:', e) // 调试点 2: 这里能看到是 JS 错误还是网络错误
-    uni.showToast({ title: '加载失败，请看控制台', icon: 'none' })
+    uni.showToast({ title: 'Loading failed', icon: 'none' })
   } finally {
     loading.value = false
   }
@@ -143,7 +143,7 @@ const formatTime = (timeStr) => {
 .container { 
     background: #f5f5f5; 
     min-height: 100vh; 
-    /* 关键：给 padding-top 留出自定义导航的高度 + 状态栏高度 */
+    /* 关键：给 padding-top 留出自定义导航的高度 + Status栏高度 */
     padding-top: calc(100rpx + var(--status-bar-height));
 }
 

@@ -35,6 +35,10 @@ if (-not (Test-Path $envFile)) {
 }
 
 Write-Host "Loaded .env" -ForegroundColor Green
+if (-not $env:JWT_SECRET -or $env:JWT_SECRET.StartsWith('replace-with-') -or
+    [System.Text.Encoding]::UTF8.GetByteCount($env:JWT_SECRET) -lt 32) {
+  throw 'Set JWT_SECRET to a unique random value of at least 32 bytes in .env.'
+}
 Write-Host "LLM_BASE_URL=$env:LLM_BASE_URL"
 Write-Host "LLM_MODEL=$env:LLM_MODEL"
 if (($env:LLM_MODEL -like '*?*') -or ($env:LLM_MODEL -like '*�*')) {

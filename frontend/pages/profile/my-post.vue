@@ -6,7 +6,7 @@
         <view class="status-bar"></view>
         <view class="nav-bar">
           <view class="back-btn" @click="goBack"><text class="back-arrow">←</text></view>
-          <text class="page-title">我的发布</text>
+          <text class="page-title">My posts</text>
         </view>
       </view>
   
@@ -15,7 +15,7 @@
           <!-- 卡片头部：用户信息 -->
           <view class="card-header">
             <view class="user-info">
-              <!-- 直接复用 store 里的当前用户头像，因为是“我的发布” -->
+              <!-- 直接复用 store 里的当前用户Avatar，因为是“My posts” -->
               <image :src="userStore.avatar || '/static/logo.png'" class="avatar-img" mode="aspectFill"/>
               <view class="meta">
                 <text class="user-name">{{ userStore.nickname }}</text>
@@ -58,7 +58,7 @@
           </view>
         </view>
         
-        <view v-if="list.length === 0" class="empty">暂无发布内容</view>
+        <view v-if="list.length === 0" class="empty">No posts yet</view>
       </view>
     </view>
 
@@ -68,7 +68,7 @@
 import { ref, onMounted } from 'vue'
 import { userApi } from '@/api/user'
 import { toAbsoluteUrl } from '@/utils/api'
-import { useUserStore } from '@/stores/user' // 引入store拿头像
+import { useUserStore } from '@/stores/user' // 引入store拿Avatar
 
 const userStore = useUserStore()
 const list = ref([])
@@ -88,7 +88,7 @@ onMounted(async () => {
 
 const goBack = () => uni.navigateBack()
 const goToDetail = (post) => uni.navigateTo({ url: `/pages/post/detail?id=${post.id}` })
-const formatDate = (str) => { if(!str) return ''; const d = new Date(str); return `${d.getMonth()+1}月${d.getDate()}日`; }
+const formatDate = (str) => { if(!str) return ''; const d = new Date(str); return `${d.getMonth()+1}/${d.getDate()}`; }
 const previewImage = (urls, current) => uni.previewImage({ urls: urls.map(getImageUrl), current })
 
 </script>

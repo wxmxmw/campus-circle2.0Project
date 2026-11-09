@@ -2,14 +2,14 @@
   <view class="edit-container">
     <!-- 新增：自定义顶部导航栏 -->
     <view class="custom-header">
-      <!-- 状态栏占位 -->
+      <!-- Status栏占位 -->
       <view class="status-bar"></view>
       <!-- 导航内容 -->
       <view class="nav-bar">
         <view class="back-btn" @click="goBack">
           <text class="back-icon">←</text>
         </view>
-        <text class="page-title">编辑资料</text>
+        <text class="page-title">Edit profile</text>
         <!-- 右侧占位，保证标题居中 -->
         <view class="right-placeholder"></view>
       </view>
@@ -17,39 +17,39 @@
 
     <!-- 表单区域 -->
     <view class="form-list">
-      <!-- 头像行 -->
+      <!-- Avatar行 -->
       <view class="form-item avatar-row" @click="handleChooseAvatar">
-        <text class="label">头像</text>
+        <text class="label">Avatar</text>
         <view class="right">
-          <image 
+          <image
             :src="avatarPreviewUrl"
-            class="avatar-preview" 
+            class="avatar-preview"
             mode="aspectFill"
           />
           <text class="arrow">></text>
         </view>
       </view>
 
-      <!-- 昵称 -->
+      <!-- Nickname -->
       <view class="form-item">
-        <text class="label">昵称</text>
-        <input class="input" v-model="form.nickname" placeholder="请输入昵称" />
+        <text class="label">Nickname</text>
+        <input class="input" v-model="form.nickname" placeholder="Enter a nickname" />
       </view>
 
-      <!-- 学院 -->
+      <!-- School -->
       <view class="form-item">
-        <text class="label">学院</text>
-        <input class="input" v-model="form.school" placeholder="例如：计算机学院" />
+        <text class="label">School</text>
+        <input class="input" v-model="form.school" placeholder="For example: Computer Science" />
       </view>
 
       <!-- 签名 -->
       <view class="form-item">
-        <text class="label">个性签名</text>
-        <input class="input" v-model="form.bio" placeholder="介绍一下自己吧" />
+        <text class="label">Bio</text>
+        <input class="input" v-model="form.bio" placeholder="Tell others about yourself" />
       </view>
     </view>
 
-    <button class="save-btn" @click="handleSave" :loading="loading">保存修改</button>
+    <button class="save-btn" @click="handleSave" :loading="loading">Save changes</button>
   </view>
 </template>
 
@@ -84,7 +84,7 @@ onMounted(() => {
   }
 })
 
-// 选择并上传头像
+// 选择并上传Avatar
 const handleChooseAvatar = () => {
   uni.chooseImage({
     count: 1,
@@ -93,16 +93,16 @@ const handleChooseAvatar = () => {
       const tempFilePath = res.tempFilePaths[0]
       // 先在本地显示预览（优化体验）
       form.avatarUrl = tempFilePath
-      
+
       try {
-        uni.showLoading({ title: '上传中...' })
+        uni.showLoading({ title: 'Uploading...' })
         // 调用上传 API
         const uploadRes = await commonApi.uploadImage(tempFilePath)
         if (uploadRes.code === 200) {
           form.avatarUrl = uploadRes.data.url
         }
       } catch (error) {
-        uni.showToast({ title: '上传失败', icon: 'none' })
+        uni.showToast({ title: 'Upload failed', icon: 'none' })
       } finally {
         uni.hideLoading()
       }
@@ -112,7 +112,7 @@ const handleChooseAvatar = () => {
 
 const goBack = () => {
   const pages = getCurrentPages()
-  // 如果页面栈大于1，说明有上一页，直接返回
+  // 如果页面栈大于1，说明有上一页，直接Back
   if (pages.length > 1) {
     uni.navigateBack()
   } else {
@@ -122,42 +122,42 @@ const goBack = () => {
 }
 
 // 保存资料
-const handleSave = async () => {  
-  if (!form.nickname) return uni.showToast({ title: '昵称不能为空', icon: 'none' })  
-    
-  loading.value = true  
-  try {  
-    const payload = {  
-      avatarUrl: (form.avatarUrl || '').trim(),  
-      nickname: (form.nickname || '').trim(),  
-      school: (form.school || '').trim(),  
-      bio: (form.bio || '').trim()  
-    }  
-    console.log('【保存数据】', payload)  
-    const res = await userApi.updateProfile(payload)  
-    console.log('【保存响应】', res)  
-      
-    if (res.code === 200) {  
+const handleSave = async () => {
+  if (!form.nickname) return uni.showToast({ title: 'Nickname is required', icon: 'none' })
+
+  loading.value = true
+  try {
+    const payload = {
+      avatarUrl: (form.avatarUrl || '').trim(),
+      nickname: (form.nickname || '').trim(),
+      school: (form.school || '').trim(),
+      bio: (form.bio || '').trim()
+    }
+    console.log('【保存数据】', payload)
+    const res = await userApi.updateProfile(payload)
+    console.log('【保存响应】', res)
+
+    if (res.code === 200) {
       userStore.updateUserInfo(res.data || payload)
-      uni.showToast({ title: '保存成功' })  
-      setTimeout(() => uni.navigateBack(), 1000)  
-    }  
-  } catch (error) {  
-    console.error('【保存失败】', error)  
-    uni.showToast({ title: error.message || '保存失败', icon: 'none' })  
-  } finally {  
-    loading.value = false  // 确保loading状态被重置  
-  }  
+      uni.showToast({ title: 'Saved' })
+      setTimeout(() => uni.navigateBack(), 1000)
+    }
+  } catch (error) {
+    console.error('【Save failed】', error)
+    uni.showToast({ title: error.message || 'Save failed', icon: 'none' })
+  } finally {
+    loading.value = false  // 确保loadingStatus被重置
+  }
 }
 </script>
 
 <style scoped>
 /* 容器 */
-.edit-container { 
-  min-height: 100vh; 
-  background: #F5F5F5; 
+.edit-container {
+  min-height: 100vh;
+  background: #F5F5F5;
   /* 关键点：避开顶部导航栏的高度
-     状态栏高度 + 导航栏内容高度(88rpx) + 额外间距(20rpx) 
+     Status bar height + navigation bar height (88rpx) + extra spacing (20rpx)
   */
   padding-top: calc(var(--status-bar-height) + 88rpx + 20rpx);
 }
@@ -173,7 +173,7 @@ const handleSave = async () => {
   box-shadow: 0 1rpx 6rpx rgba(0,0,0,0.05); /* 加一点阴影更有层次感 */
 }
 .status-bar {
-  height: var(--status-bar-height); /* 占满手机状态栏 */
+  height: var(--status-bar-height); /* 占满手机Status栏 */
   background: #fff;
 }
 .nav-bar {
@@ -201,7 +201,7 @@ const handleSave = async () => {
   color: #333;
 }
 .right-placeholder {
-  width: 80rpx; /* 与返回按钮同宽，确保标题绝对居中 */
+  width: 80rpx; /* 与BackBy钮同宽，确保标题绝对居中 */
 }
 
 /* --- 表单样式 --- */
@@ -225,7 +225,7 @@ const handleSave = async () => {
 .arrow { color: #ccc; }
 
 .save-btn {
-  margin: 60rpx 30rpx; background: #2f2f2f; color: #fff; 
+  margin: 60rpx 30rpx; background: #2f2f2f; color: #fff;
   border-radius: 40rpx; font-size: 32rpx;
 }
 .save-btn:active { opacity: 0.9; }

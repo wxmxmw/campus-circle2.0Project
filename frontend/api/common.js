@@ -1,8 +1,6 @@
-import mock from '@/mock/common'  
 import request from '../utils/request.js'  
 import { getApiBaseUrl } from '@/utils/api'
   
-const USE_MOCK = false  
 const PENDING_POST_IMAGE_URLS_KEY = 'pendingPostImageUrls'
 
 const rememberPostImageUrls = (urls = []) => {
@@ -64,7 +62,6 @@ export async function uploadBatchImages(files) {
   
 export const commonApi = {  
   uploadImage(filePath) {  
-    if (USE_MOCK) return mock.uploadFile()  
       
     return new Promise((resolve, reject) => {  
       const token = uni.getStorageSync('token')  

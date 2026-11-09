@@ -62,21 +62,21 @@ public class CommonController {
             @AuthenticationPrincipal UserDetails principal,
             @RequestParam("file") MultipartFile file) {
 
-        log.info("=== 接收到头像上传请求 ===");
+        log.info("Avatar upload received");
 
         if (principal == null) {
             throw new BizException(ErrorCode.UNAUTHORIZED);
         }
 
         if (file.isEmpty()) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "文件不能为空");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "File cannot be empty");
         }
 
         try {
             // 校验文件类型
             String contentType = file.getContentType();
-            if (contentType == null || !contentType.startsWith("image/")) {
-                throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "只支持图片文件");
+            if (!DEFAULT_ALLOW_TYPES.contains(contentType) || ImageIO.read(file.getInputStream()) == null) {
+                throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Invalid image file");
             }
 
             // 1. 准备路径: uploads/avatars
@@ -87,14 +87,19 @@ public class CommonController {
 
             // 2. 生成唯一文件名
             String originalFilename = file.getOriginalFilename();
-            String extension = (originalFilename != null && originalFilename.lastIndexOf(".") != -1)
-                    ? originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
+            String extension = switch (contentType) {
+                case "image/jpeg" -> ".jpg";
+                case "image/png" -> ".png";
+                case "image/webp" -> ".webp";
+                case "image/gif" -> ".gif";
+                default -> throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Unsupported image type");
+            };
             String filename = UUID.randomUUID().toString() + extension;
 
             // 3. 保存文件到磁盘
             Path filePath = uploadDir.resolve(filename);
             Files.copy(file.getInputStream(), filePath);
-            log.info("头像文件已保存: {}", filePath);
+            log.info("Avatar file saved: {}", filePath);
 
             // 4. 生成URL
             String fileUrl =  "/api/uploads/avatars/" + filename;
@@ -115,12 +120,12 @@ public class CommonController {
         } catch (BizException e) {
             throw e;
         } catch (IOException e) {
-            log.error("头像上传IO错误", e);
-            throw new BizException(500, "文件写入失败");
+            log.error("Avatar upload I/O error", e);
+            throw new BizException(500, "Could not write file");
         } catch (Exception e) {
-            log.error("头像上传未知错误", e);
+            log.error("Unexpected avatar upload error", e);
             e.printStackTrace();
-            throw new BizException(500, "服务器内部错误");
+            throw new BizException(500, "Internal server error");
         }
     }
 
@@ -149,17 +154,18 @@ public class CommonController {
 
         // 2. 参数基础校验
         if (files == null || files.length == 0) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "请选择要上传的文件");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Select files to upload");
         }
         if (files.length > 9) {
-            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "最多同时上传9张图片");
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Upload at most 9 images");
+        }
+
+        if (!"post_image".equals(scene)) {
+            throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Invalid upload scene");
         }
 
         // 处理允许的文件类型
         Set<String> allowedMimeTypes = DEFAULT_ALLOW_TYPES;
-        if (allowTypes != null && !allowTypes.isEmpty()) {
-            allowedMimeTypes = new HashSet<>(Arrays.asList(allowTypes.split(",")));
-        }
 
         List<Map<String, Object>> resultList = new ArrayList<>();
 
@@ -178,29 +184,33 @@ public class CommonController {
 
                 // 大小校验 (10MB)
                 if (file.getSize() > 10 * 1024 * 1024) {
-                    throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "单个文件大小不能超过10MB: " + file.getOriginalFilename());
+                    throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "File exceeds 10 MB: " + file.getOriginalFilename());
                 }
 
                 // 类型校验
                 if (!allowedMimeTypes.contains(file.getContentType())) {
-                    throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "不支持的文件类型: " + file.getOriginalFilename());
+                    throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Unsupported file type: " + file.getOriginalFilename());
                 }
 
                 // 读取图片宽高
                 BufferedImage image = ImageIO.read(file.getInputStream());
                 int width = 0;
                 int height = 0;
-                if (image != null) {
-                    width = image.getWidth();
-                    height = image.getHeight();
+                if (image == null) {
+                    throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Invalid image file");
                 }
+                width = image.getWidth();
+                height = image.getHeight();
 
                 // 生成文件名
                 String originalFilename = file.getOriginalFilename();
-                String extension = "";
-                if (originalFilename != null && originalFilename.lastIndexOf(".") != -1) {
-                    extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-                }
+                String extension = switch (file.getContentType()) {
+                    case "image/jpeg" -> ".jpg";
+                    case "image/png" -> ".png";
+                    case "image/webp" -> ".webp";
+                    case "image/gif" -> ".gif";
+                    default -> throw new BizException(ErrorCode.BAD_REQUEST.getCode(), "Unsupported image type");
+                };
                 String filename = UUID.randomUUID().toString() + extension;
 
                 // 保存文件到磁盘
@@ -251,13 +261,15 @@ public class CommonController {
 
             return Result.ok(data);
 
+        } catch (BizException e) {
+            throw e;
         } catch (IOException e) {
-            log.error("批量上传IO异常", e);
-            throw new BizException(500, "文件保存失败");
+            log.error("Batch upload I/O error", e);
+            throw new BizException(500, "Could not save file");
         } catch (Exception e) {
-            log.error("批量上传系统错误", e);
+            log.error("Batch upload error", e);
             e.printStackTrace();
-            throw new BizException(500, "系统内部错误: " + e.getMessage());
+            throw new BizException(500, "Internal server error: " + e.getMessage());
         }
     }
 }

@@ -55,7 +55,7 @@ public class AuthController {
     @PostMapping("/register")
     public Result<Void> register(@Validated @RequestBody RegisterRequest req) {
         if (userRepository.existsByUsername(req.getUsername()) || userRepository.existsByEmail(req.getEmail())) {
-            throw new BizException(ErrorCode.CONFLICT.getCode(), "用户名或邮箱已存在");
+            throw new BizException(ErrorCode.CONFLICT.getCode(), "Username or email already exists");
         }
         User u = new User();
         u.setUsername(req.getUsername());
@@ -63,7 +63,7 @@ public class AuthController {
         u.setPasswordHash(req.getPassword());
         u.setRole("USER");
         userService.save(u);
-        return Result.okMessage("注册成功");
+        return Result.okMessage("Registration successful");
     }
 
     @PostMapping("/login")
@@ -127,6 +127,6 @@ public class AuthController {
             } catch (Exception e) {
             }
         }
-        return Result.okMessage("已退出");
+        return Result.okMessage("Signed out");
     }
 }

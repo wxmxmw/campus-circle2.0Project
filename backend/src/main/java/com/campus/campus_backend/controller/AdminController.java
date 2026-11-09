@@ -219,6 +219,6 @@ public class AdminController {
         }
 
         reportRepository.save(report);
-        return Result.okMessage("处理完成: " + note);
+        return Result.okMessage("Processed: " + note);
     }
 }

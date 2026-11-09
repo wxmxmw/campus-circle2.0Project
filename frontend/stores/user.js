@@ -15,7 +15,7 @@ export const useUserStore = defineStore('user', () => {
   // 计算属性
   const isLoggedIn = computed(() => !!token.value)
   const avatar = computed(() => toAbsoluteUrl(userInfo.value?.avatarUrl, '/static/logo.png'))
-  const nickname = computed(() => userInfo.value?.nickname || '未登录用户')
+  const nickname = computed(() => userInfo.value?.nickname || 'Guest')
   
   // [新增] 管理员判断逻辑
     const isAdmin = computed(() => {
@@ -24,7 +24,7 @@ export const useUserStore = defineStore('user', () => {
       return userInfo.value?.role === 'ADMIN'
     })
 
-  // 动作：登录成功处理
+  // 动作：Signed in处理
   const setLoginState = (loginData) => {
     token.value = loginData.token
     userInfo.value = loginData.user
@@ -40,7 +40,7 @@ export const useUserStore = defineStore('user', () => {
     uni.setStorageSync('userInfo', userInfo.value)
   }
 
-  // 动作：退出登录 (U05)
+  // 动作：Sign out (U05)
   const logout = () => {
     token.value = ''
     userInfo.value = null

@@ -2,11 +2,11 @@
   <view class="container">
     <!-- 1. 新增：自定义顶部导航栏 (固定顶部) -->
     <view class="nav-header">
-      <!-- 返回按钮区域，增大点击范围 -->
+      <!-- BackBy钮区域，增大点击范围 -->
       <view class="back-btn-area" @click="goBack">
         <text class="back-arrow">←</text>
       </view>
-      <text class="nav-title">我的跑腿</text>
+      <text class="nav-title">My errands</text>
       <!-- 右侧占位，为了让标题绝对居中 -->
       <view class="right-placeholder"></view>
     </view>
@@ -18,14 +18,14 @@
         :class="{ active: currentType === 'published' }"
         @click="switchTab('published')"
       >
-        我发布的
+        Posted by me
       </view>
       <view 
         class="tab-item" 
         :class="{ active: currentType === 'accepted' }"
         @click="switchTab('accepted')"
       >
-        我帮送的
+        Accepted by me
       </view>
     </view>
 
@@ -45,9 +45,9 @@
         <view class="item-body">
           <view class="content">{{ item.content }}</view>
           <view class="route-line">
-            <text class="dot pick">取</text> {{ item.pickupAddr }}
+            <text class="dot pick">Pickup</text> {{ item.pickupAddr }}
             <text class="arrow">→</text>
-            <text class="dot send">送</text> {{ item.deliveryAddr }}
+            <text class="dot send">Delivery</text> {{ item.deliveryAddr }}
           </view>
         </view>
         
@@ -56,11 +56,11 @@
             <template v-if="item.currency === 1">💰 {{ item.bounty }}</template>
             <template v-else>¥ {{ item.bounty }}</template>
           </view>
-          <view class="btn check-btn">查看详情</view>
+          <view class="btn check-btn">View details</view>
         </view>
       </view>
       
-      <view v-if="list.length === 0" class="empty">暂无相关订单</view>
+      <view v-if="list.length === 0" class="empty">No matching errands</view>
     </scroll-view>
   </view>
 </template>
@@ -81,14 +81,14 @@ const switchTab = (type) => {
   list.value = [] // 切换时先清空
   loadData()
 }
-// 新增：返回上一页
+// 新增：Back上一页
 const goBack = () => {
   uni.navigateBack()
 }
 
 const loadData = async () => {
   try {
-    uni.showLoading({ title: '加载中' })
+    uni.showLoading({ title: 'Loading' })
     const res = await userApi.getMyErrands(currentType.value)
     if (res.code === 200) {
       list.value = res.data.list
@@ -102,7 +102,7 @@ const goToDetail = (id) => {
   uni.navigateTo({ url: `/pages/errand/detail?id=${id}` })
 }
 
-const formatStatus = (s) => ['待接单', '进行中', '已完成', '已取消'][s] || '未知'
+const formatStatus = (s) => ['Open', 'In progress', 'Completed', 'Cancelled'][s] || 'Unknown'
 const formatDate = (ts) => {
   const d = new Date(ts)
   return `${d.getMonth()+1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}`
@@ -114,7 +114,7 @@ const formatDate = (ts) => {
 .container {
   min-height: 100vh;
   background: #f5f5f5;
-  /* 关键点：整个页面内容避开 导航栏(88rpx) + 状态栏高度 + Tabs高度(80rpx) */
+  /* 关键点：整个页面内容避开 导航栏(88rpx) + Status栏高度 + Tabs高度(80rpx) */
   padding-top: calc(var(--status-bar-height) + 88rpx + 80rpx);
 }
 
@@ -126,7 +126,7 @@ const formatDate = (ts) => {
   width: 100%;
   z-index: 999;
   background-color: #fff;
-  padding-top: var(--status-bar-height); /* 避开手机状态栏/刘海 */
+  padding-top: var(--status-bar-height); /* 避开手机Status栏/刘海 */
   height: 88rpx; /* 标准导航栏内容高度 */
   display: flex;
   align-items: center;
@@ -161,7 +161,7 @@ const formatDate = (ts) => {
 /* --- 2. Tabs 样式 (位置需要紧贴导航栏下方) --- */
 .tabs {
   position: fixed;
-  /* Tabs 的 top = 状态栏高度 + 导航栏高度(88rpx) */
+  /* Tabs 的 top = Status栏高度 + 导航栏高度(88rpx) */
   top: calc(var(--status-bar-height) + 88rpx);
   left: 0;
   width: 100%;
@@ -223,10 +223,10 @@ const formatDate = (ts) => {
 
 .time { color: #999; }
 .status { font-weight: bold; }
-.s-0 { color: #666666; } /* 待接单 */
-.s-1 { color: #5a5a5a; } /* 进行中 */
+.s-0 { color: #666666; } /* Open */
+.s-1 { color: #5a5a5a; } /* In progress */
 .s-2 { color: #3f3f3f; }
-.s-3 { color: #999; }    /* 已取消 */
+.s-3 { color: #999; }    /* Cancelled */
 
 .item-body { margin-bottom: 20rpx; }
 .content { font-size: 30rpx; font-weight: bold; color: #333; margin-bottom: 16rpx; }

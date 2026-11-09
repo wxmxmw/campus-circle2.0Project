@@ -13,6 +13,7 @@ import com.campus.campus_backend.service.UserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Set;
 import java.util.List;
@@ -20,28 +21,38 @@ import java.util.List;
 @Configuration
 public class DataInitializer {
     @Bean
-    public CommandLineRunner initUsers(UserRepository userRepository, UserService userService) {
+    public CommandLineRunner initUsers(UserRepository userRepository, UserService userService,
+            @Value("${app.bootstrap-admin.username:}") String adminUsername,
+            @Value("${app.bootstrap-admin.password:}") String adminPassword,
+            @Value("${app.bootstrap-admin.email:}") String adminEmail) {
         return args -> {
-            userRepository.findByUsername("admin").ifPresentOrElse(existing -> {
-                if (!"ADMIN".equalsIgnoreCase(existing.getRole())) {
-                    existing.setRole("ADMIN");
-                    userRepository.save(existing);
-                }
-            }, () -> {
-                User u = new User();
-                u.setUsername("admin");
-                u.setEmail("admin@example.com");
-                u.setPasswordHash("admin123");
-                u.setRole("ADMIN");
-                userService.save(u);
-            });
+            if (adminUsername.isBlank() || adminPassword.isBlank() || adminEmail.isBlank()) return;
+            if (adminPassword.length() < 16) {
+                throw new IllegalArgumentException("Bootstrap admin password must be at least 16 characters");
+            }
+            if (userRepository.findByUsername(adminUsername).isPresent()) return;
+            User user = new User();
+            user.setUsername(adminUsername);
+            user.setEmail(adminEmail);
+            user.setPasswordHash(adminPassword);
+            user.setRole("ADMIN");
+            userService.save(user);
         };
     }
 
     @Bean
     public CommandLineRunner initCategories(CategoryRepository categoryRepository) {
         return args -> {
-            List<String> preset = List.of("闲置", "求助", "日常生活", "投票", "吐槽");
+            List<String> preset = List.of("Marketplace", "Help", "Daily Life", "Polls", "Discussion");
+            List<String> legacy = List.of("闲置", "求助", "日常生活", "投票", "吐槽");
+            for (int i = 0; i < legacy.size(); i++) {
+                String oldName = legacy.get(i);
+                String newName = preset.get(i);
+                if (categoryRepository.findAll().stream().noneMatch(c -> newName.equals(c.getName()))) {
+                    categoryRepository.findAll().stream().filter(c -> oldName.equals(c.getName()))
+                            .findFirst().ifPresent(c -> { c.setName(newName); categoryRepository.save(c); });
+                }
+            }
             boolean needSeed = categoryRepository.count() == 0;
             if (!needSeed) {
                 long existing = categoryRepository.findAll().stream()
@@ -86,8 +97,8 @@ public class DataInitializer {
                             && source.getFetchStrategy().toUpperCase().startsWith("MOCK"))
                     .forEach(subscriptionSourceRepository::delete);
 
-            seedSource(subscriptionSourceRepository, "人工补录", "MANUAL", "manual-notice",
-                    null, "人工 补录", "MANUAL");
+            seedSource(subscriptionSourceRepository, "Manual entry", "MANUAL", "manual-notice",
+                    null, "Manual entry", "MANUAL");
         };
     }
 

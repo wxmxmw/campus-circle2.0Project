@@ -4,13 +4,13 @@
       <view class="status-bar"></view>
       <view class="nav">
         <view class="nav-btn" @click="goBack">‹</view>
-        <view class="nav-title">事件详情</view>
-        <view class="nav-btn small" @click="refreshDetail">刷新</view>
+        <view class="nav-title">Event details</view>
+        <view class="nav-btn small" @click="refreshDetail">Refresh</view>
       </view>
     </view>
 
     <scroll-view scroll-y class="content">
-      <view v-if="loading" class="state-card">详情加载中...</view>
+      <view v-if="loading" class="state-card">Loading details...</view>
 
       <template v-else>
         <view class="overview-card">
@@ -23,32 +23,32 @@
             <text class="code">{{ overview.eventCode }}</text>
           </view>
           <text class="title">{{ overview.title }}</text>
-          <text class="summary">{{ overview.summary || '暂无事件摘要。' }}</text>
+          <text class="summary">{{ overview.summary || 'No event summary.' }}</text>
           <view class="stats">
-            <view class="stat"><text class="num">{{ overview.riskScore || 0 }}</text><text class="label">风险分</text></view>
-            <view class="stat"><text class="num">{{ overview.sourceCount || 0 }}</text><text class="label">信号</text></view>
-            <view class="stat"><text class="num">{{ overview.reportCount || 0 }}</text><text class="label">举报</text></view>
-            <view class="stat"><text class="num">{{ overview.negativeRatio || 0 }}%</text><text class="label">负面占比</text></view>
+            <view class="stat"><text class="num">{{ overview.riskScore || 0 }}</text><text class="label">Risk score</text></view>
+            <view class="stat"><text class="num">{{ overview.sourceCount || 0 }}</text><text class="label">Signals</text></view>
+            <view class="stat"><text class="num">{{ overview.reportCount || 0 }}</text><text class="label">Reports</text></view>
+            <view class="stat"><text class="num">{{ overview.negativeRatio || 0 }}%</text><text class="label">Negative share</text></view>
           </view>
           <view class="timeline-meta">
-            <text>开始：{{ formatDate(overview.startedAt) }}</text>
-            <text>最近活跃：{{ formatDate(overview.lastActiveAt) }}</text>
+            <text>Started：{{ formatDate(overview.startedAt) }}</text>
+            <text>Last active：{{ formatDate(overview.lastActiveAt) }}</text>
           </view>
         </view>
 
         <view class="action-panel">
-          <button class="action-btn primary" :loading="reanalyzing" :disabled="reanalyzing" @click="handleReanalyze">重新分析</button>
-          <button class="action-btn" @click="handleManualAction">记录动作</button>
-          <button class="action-btn" @click="handleClose">关闭事件</button>
-          <button class="action-btn" :loading="postmortemLoading" :disabled="postmortemLoading" @click="loadPostmortem">生成复盘</button>
+          <button class="action-btn primary" :loading="reanalyzing" :disabled="reanalyzing" @click="handleReanalyze">Analyze again</button>
+          <button class="action-btn" @click="handleManualAction">Record action</button>
+          <button class="action-btn" @click="handleClose">Close event</button>
+          <button class="action-btn" :loading="postmortemLoading" :disabled="postmortemLoading" @click="loadPostmortem">Generate review</button>
         </view>
 
         <view class="section-card">
-          <text class="section-title">最新快照</text>
-          <text class="block-title">观点摘要</text>
-          <text class="block-text">{{ latestSnapshot.opinionSummary || '暂无' }}</text>
-          <text class="block-title">诉求摘要</text>
-          <text class="block-text">{{ latestSnapshot.demandsSummary || '暂无' }}</text>
+          <text class="section-title">Latest snapshot</text>
+          <text class="block-title">Opinion summary</text>
+          <text class="block-text">{{ latestSnapshot.opinionSummary || 'None' }}</text>
+          <text class="block-title">Demand summary</text>
+          <text class="block-text">{{ latestSnapshot.demandsSummary || 'None' }}</text>
 
           <view class="chip-row">
             <text v-for="item in latestSituation.keywords || []" :key="item" class="chip">{{ item }}</text>
@@ -56,40 +56,40 @@
 
           <view class="snapshot-grid">
             <view class="snapshot-box">
-              <text class="snapshot-label">立场分布</text>
-              <text class="snapshot-value">反对 {{ latestSituation.stanceDistribution?.oppose || 0 }} / 中性 {{ latestSituation.stanceDistribution?.neutral || 0 }} / 支持 {{ latestSituation.stanceDistribution?.support || 0 }}</text>
+              <text class="snapshot-label">Stance distribution</text>
+              <text class="snapshot-value">Oppose {{ latestSituation.stanceDistribution?.oppose || 0 }} / Neutral {{ latestSituation.stanceDistribution?.neutral || 0 }} / Support {{ latestSituation.stanceDistribution?.support || 0 }}</text>
             </view>
             <view class="snapshot-box">
-              <text class="snapshot-label">核验结论</text>
-              <text class="snapshot-value">{{ latestRumor.conclusion || '暂无' }}</text>
+              <text class="snapshot-label">Verification result</text>
+              <text class="snapshot-value">{{ latestRumor.conclusion || 'None' }}</text>
             </view>
           </view>
 
           <view class="sub-section">
-            <text class="sub-title">建议动作</text>
-            <view v-if="recommendedActions.length === 0" class="empty-line">暂无建议动作</view>
+            <text class="sub-title">Suggested actions</text>
+            <view v-if="recommendedActions.length === 0" class="empty-line">No suggested actions</view>
             <view v-for="action in recommendedActions" :key="`${action.type}-${action.priority}`" class="suggestion-item">
               <view class="suggestion-main">
                 <text class="suggestion-type">{{ action.type }}</text>
                 <text class="suggestion-reason">{{ action.reason }}</text>
               </view>
-              <button class="mini-btn" @click="applySuggestedAction(action)">采纳</button>
+              <button class="mini-btn" @click="applySuggestedAction(action)">Apply</button>
             </view>
           </view>
         </view>
 
         <view class="section-card">
-          <text class="section-title">证据与核验</text>
-          <view v-if="evidenceList.length === 0" class="empty-line">当前没有沉淀的权威证据。</view>
+          <text class="section-title">Evidence and verification</text>
+          <view v-if="evidenceList.length === 0" class="empty-line">No verified evidence yet.</view>
           <view v-for="item in evidenceList" :key="item.id" class="evidence-item">
             <text class="evidence-title">{{ item.title || item.evidenceType }}</text>
-            <text class="evidence-text">{{ item.excerpt || '暂无摘录' }}</text>
-            <text class="evidence-meta">{{ item.evidenceType }} · 置信度 {{ item.confidence || 0 }}</text>
+            <text class="evidence-text">{{ item.excerpt || 'No excerpt' }}</text>
+            <text class="evidence-meta">{{ item.evidenceType }} · Confidence {{ item.confidence || 0 }}</text>
           </view>
         </view>
 
         <view class="section-card">
-          <text class="section-title">关联信号</text>
+          <text class="section-title">Related signals</text>
           <view v-for="item in signals" :key="item.id" class="signal-item">
             <view class="signal-top">
               <text class="signal-type">{{ item.signalType }}</text>
@@ -100,40 +100,40 @@
         </view>
 
         <view class="section-card">
-          <text class="section-title">治理动作记录</text>
-          <view v-if="actions.length === 0" class="empty-line">还没有管理员动作。</view>
+          <text class="section-title">Action log</text>
+          <view v-if="actions.length === 0" class="empty-line">No administrator actions yet.</view>
           <view v-for="item in actions" :key="item.id" class="action-log">
             <text class="log-title">{{ item.actionType }}</text>
-            <text class="log-note">{{ item.actionNote || '无备注' }}</text>
-            <text class="log-meta">{{ formatDate(item.createdAt) }} · {{ item.fromAgent ? '来自 AI 建议' : '人工记录' }}</text>
+            <text class="log-note">{{ item.actionNote || 'No note' }}</text>
+            <text class="log-meta">{{ formatDate(item.createdAt) }} · {{ item.fromAgent ? 'Suggested by AI' : 'Manual entry' }}</text>
           </view>
         </view>
 
         <view class="section-card">
-          <text class="section-title">历史快照</text>
+          <text class="section-title">Snapshot history</text>
           <view v-for="item in snapshots" :key="item.id" class="snapshot-item">
             <view class="snapshot-top">
               <text class="snapshot-version">V{{ item.versionNo }}</text>
               <text class="snapshot-time">{{ formatDate(item.createdAt) }}</text>
             </view>
-            <text class="snapshot-desc">{{ item.opinionSummary || '暂无摘要' }}</text>
+            <text class="snapshot-desc">{{ item.opinionSummary || 'No summary' }}</text>
           </view>
         </view>
 
         <view class="section-card">
           <view class="section-row">
-            <text class="section-title">事件复盘</text>
-            <button class="mini-btn outline" :loading="postmortemLoading" :disabled="postmortemLoading" @click="loadPostmortem">刷新复盘</button>
+            <text class="section-title">Event review</text>
+            <button class="mini-btn outline" :loading="postmortemLoading" :disabled="postmortemLoading" @click="loadPostmortem">Refresh review</button>
           </view>
-          <view v-if="!postmortem" class="empty-line">关闭事件后可生成完整复盘，也可以提前预览当前复盘稿。</view>
+          <view v-if="!postmortem" class="empty-line">A full review can be generated after closing the event; a draft is available now.</view>
           <template v-else>
             <text class="block-text">{{ postmortem.summary }}</text>
-            <text class="sub-title">关键节点</text>
+            <text class="sub-title">Key moments</text>
             <view v-for="(item, index) in postmortem.timeline || []" :key="`${item.time}-${index}`" class="timeline-item">
               <text class="timeline-time">{{ formatDate(item.time) }}</text>
               <text class="timeline-content">{{ item.type }} · {{ item.content }}</text>
             </view>
-            <text class="sub-title">经验建议</text>
+            <text class="sub-title">Lessons</text>
             <text v-for="item in postmortem.lessons || []" :key="item" class="lesson-item">· {{ item }}</text>
           </template>
         </view>
@@ -183,7 +183,7 @@ const refreshDetail = async () => {
       await loadPostmortem(false)
     }
   } catch (error) {
-    uni.showToast({ title: error.message || '加载失败', icon: 'none' })
+    uni.showToast({ title: error.message || 'Loading failed', icon: 'none' })
   } finally {
     loading.value = false
   }
@@ -192,12 +192,12 @@ const refreshDetail = async () => {
 const handleReanalyze = async () => {
   try {
     reanalyzing.value = true
-    uni.showLoading({ title: '重新分析中...', mask: true })
+    uni.showLoading({ title: 'Analyzing...', mask: true })
     await governanceApi.reanalyzeEvent(eventId.value)
-    uni.showToast({ title: '分析完成', icon: 'success' })
+    uni.showToast({ title: 'Analysis complete', icon: 'success' })
     await refreshDetail()
   } catch (error) {
-    uni.showToast({ title: error.message || '分析失败', icon: 'none' })
+    uni.showToast({ title: error.message || 'Analysis failed', icon: 'none' })
   } finally {
     reanalyzing.value = false
     uni.hideLoading()
@@ -211,20 +211,20 @@ const handleManualAction = () => {
     success: ({ tapIndex }) => {
       const actionType = options[tapIndex]
       uni.showModal({
-        title: `记录 ${actionType}`,
+        title: `Record ${actionType}`,
         editable: true,
-        placeholderText: '请输入动作说明',
+        placeholderText: 'Describe the action',
         success: async (res) => {
           if (!res.confirm) return
           try {
             await governanceApi.recordAction(eventId.value, {
               actionType,
-              actionNote: res.content || `${actionType} - 管理员手动记录`
+              actionNote: res.content || `${actionType} - Manual administrator note`
             })
-            uni.showToast({ title: '已记录', icon: 'success' })
+            uni.showToast({ title: 'Recorded', icon: 'success' })
             await refreshDetail()
           } catch (error) {
-            uni.showToast({ title: error.message || '记录失败', icon: 'none' })
+            uni.showToast({ title: error.message || 'Could not record', icon: 'none' })
           }
         }
       })
@@ -239,28 +239,28 @@ const applySuggestedAction = async (action) => {
       actionNote: action.reason,
       fromAgent: true
     })
-    uni.showToast({ title: '建议已采纳', icon: 'success' })
+    uni.showToast({ title: 'Suggestion applied', icon: 'success' })
     await refreshDetail()
   } catch (error) {
-    uni.showToast({ title: error.message || '操作失败', icon: 'none' })
+    uni.showToast({ title: error.message || 'Action failed', icon: 'none' })
   }
 }
 
 const handleClose = () => {
   uni.showModal({
-    title: '关闭事件',
+    title: 'Close event',
     editable: true,
-    placeholderText: '请输入关闭说明',
+    placeholderText: 'Explain why the event is closed',
     success: async (res) => {
       if (!res.confirm) return
       try {
-        uni.showLoading({ title: '关闭中...' })
-        const response = await governanceApi.closeEvent(eventId.value, res.content || '管理员确认事件已完成处理')
+        uni.showLoading({ title: 'Closing...' })
+        const response = await governanceApi.closeEvent(eventId.value, res.content || 'Administrator confirmed resolution')
         postmortem.value = response.data || null
-        uni.showToast({ title: '事件已关闭', icon: 'success' })
+        uni.showToast({ title: 'Event closed', icon: 'success' })
         await refreshDetail()
       } catch (error) {
-        uni.showToast({ title: error.message || '关闭失败', icon: 'none' })
+        uni.showToast({ title: error.message || 'Could not close', icon: 'none' })
       } finally {
         uni.hideLoading()
       }
@@ -274,11 +274,11 @@ const loadPostmortem = async (withToast = true) => {
     const res = await governanceApi.getPostmortem(eventId.value)
     postmortem.value = res.data || null
     if (withToast) {
-      uni.showToast({ title: '复盘已更新', icon: 'success' })
+      uni.showToast({ title: 'Review updated', icon: 'success' })
     }
   } catch (error) {
     if (withToast) {
-      uni.showToast({ title: error.message || '复盘生成失败', icon: 'none' })
+      uni.showToast({ title: error.message || 'Could not generate review', icon: 'none' })
     }
   } finally {
     postmortemLoading.value = false
@@ -286,7 +286,7 @@ const loadPostmortem = async (withToast = true) => {
 }
 
 const formatDate = (value) => {
-  if (!value || value === 'null') return '暂无'
+  if (!value || value === 'null') return 'None'
   try {
     const date = new Date(value)
     return `${date.getMonth() + 1}-${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`

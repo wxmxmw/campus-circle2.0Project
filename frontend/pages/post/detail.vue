@@ -209,7 +209,7 @@ export default {
       try {
         await Promise.all([this.fetchPostDetail(), this.fetchComments()]);
       } catch (error) {
-        console.error('加载失败:', error);
+        console.error('Loading failed:', error);
         uni.showToast({ title: 'Load failed', icon: 'none' });
       } finally {
         this.loading = false;

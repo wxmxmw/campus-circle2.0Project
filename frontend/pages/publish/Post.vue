@@ -2,15 +2,15 @@
   <view class="publish-page">
     <view class="nav-header">
       <text class="close-btn" @click="goBack">×</text>
-      <text class="nav-title">发布帖子</text>
+      <text class="nav-title">Create post</text>
       <view class="placeholder"></view>
     </view>
 
     <view class="topic-section">
       <view class="topic-header" @click="toggleTopicPanel">
-        <text class="topic-title">选择话题</text>
+        <text class="topic-title">Choose a topic</text>
         <view class="topic-hint">
-          <text>选一个合适的话题，会更容易被看到</text>
+          <text>Choose a topic so others can find your post</text>
           <text class="arrow" :class="{ expanded: showTopicPanel }">⌄</text>
         </view>
       </view>
@@ -42,13 +42,13 @@
         class="title-input"
         v-model="title"
         maxlength="60"
-        placeholder="标题（可选，AI 可生成）"
+        placeholder="Title (optional; AI can suggest one)"
       />
 
       <textarea
         class="content-input"
         v-model="content"
-        placeholder="写点想说的内容..."
+        placeholder="Write your post..."
         :maxlength="2000"
         auto-height
       ></textarea>
@@ -59,11 +59,11 @@
     <view class="ai-section">
       <view class="ai-header">
         <view>
-          <text class="ai-title">AI 发帖助手</text>
-          <text class="ai-subtitle">生成标题、润色正文、推荐话题和标签</text>
+          <text class="ai-title">AI writing assistant</text>
+          <text class="ai-subtitle">Suggest a title, improve the text, and recommend a topic and tags</text>
         </view>
         <button class="ai-btn" :disabled="aiLoading" @click="handleAiAssist">
-          {{ aiLoading ? '生成中...' : '一键生成' }}
+          {{ aiLoading ? 'Generating...' : 'Generate' }}
         </button>
       </view>
 
@@ -73,37 +73,37 @@
           class="ai-review-banner"
           :class="`risk-${aiReview.riskLevel || 'low'}`"
         >
-          <text class="ai-review-title">AI审查：{{ reviewLabel }}</text>
-          <text class="ai-review-msg">{{ aiReview.suggestion || '内容已完成审查，可继续编辑。' }}</text>
-          <text v-if="reviewCategoriesText" class="ai-review-meta">风险类别：{{ reviewCategoriesText }}</text>
-          <text v-if="reviewHitsText" class="ai-review-meta">命中规则：{{ reviewHitsText }}</text>
+          <text class="ai-review-title">AI review：{{ reviewLabel }}</text>
+          <text class="ai-review-msg">{{ aiReview.suggestion || 'Review complete. You can keep editing.' }}</text>
+          <text v-if="reviewCategoriesText" class="ai-review-meta">Risk categories：{{ reviewCategoriesText }}</text>
+          <text v-if="reviewHitsText" class="ai-review-meta">Matched rules：{{ reviewHitsText }}</text>
           <button
             v-if="(aiReview.riskLevel === 'medium' || aiReview.riskLevel === 'high') && aiReview.suggestion"
             class="small-btn"
             @click="applyReviewSuggestion"
-          >按建议替换</button>
+          >Apply suggestion</button>
         </view>
 
         <view class="ai-result-item">
-          <text class="ai-label">标题建议</text>
+          <text class="ai-label">Suggested title</text>
           <text class="ai-value">{{ aiSuggestion.title }}</text>
-          <button class="small-btn" @click="useAiTitle">使用标题</button>
+          <button class="small-btn" @click="useAiTitle">Use title</button>
         </view>
 
         <view class="ai-result-item">
-          <text class="ai-label">润色正文</text>
+          <text class="ai-label">Improved text</text>
           <view class="ai-value ai-content-value">{{ aiSuggestion.polishedContent }}</view>
-          <button class="small-btn" @click="useAiContent">使用正文</button>
+          <button class="small-btn" @click="useAiContent">Use text</button>
         </view>
 
         <view class="ai-result-item">
-          <text class="ai-label">推荐话题</text>
+          <text class="ai-label">Suggested topic</text>
           <text class="ai-value">{{ aiSuggestion.recommendedCategoryName }}</text>
-          <button class="small-btn" @click="useAiCategory">使用话题</button>
+          <button class="small-btn" @click="useAiCategory">Use topic</button>
         </view>
 
         <view class="ai-result-item">
-          <text class="ai-label">推荐标签</text>
+          <text class="ai-label">Suggested tags</text>
           <view class="tag-list">
             <text
               v-for="tag in aiSuggestion.tags"
@@ -113,7 +113,7 @@
               @click="toggleTag(tag)"
             >{{ tag }}</text>
           </view>
-          <button class="small-btn" @click="handleAiAssist">重新生成</button>
+          <button class="small-btn" @click="handleAiAssist">Generate again</button>
         </view>
       </view>
     </view>
@@ -137,59 +137,59 @@
           <text class="add-icon">+</text>
         </view>
       </view>
-      <text class="image-tip">最多上传 9 张图片</text>
+      <text class="image-tip">Upload up to 9 images</text>
     </view>
 
     <view v-if="selectedTopic === 1" class="product-section">
-      <view class="section-title">商品信息</view>
+      <view class="section-title">Item details</view>
 
       <view class="form-item">
-        <text class="label">价格</text>
+        <text class="label">Price</text>
         <view class="price-input-wrapper">
           <text class="price-symbol">￥</text>
           <input
             class="price-input"
             type="digit"
             v-model="price"
-            placeholder="输入价格"
+            placeholder="Enter a price"
           />
         </view>
       </view>
 
       <view class="form-item">
-        <text class="label">交易方式</text>
+        <text class="label">Exchange method</text>
         <view class="trade-options">
           <view class="trade-option" :class="{ active: tradeMethod === 'face' }" @click="tradeMethod = 'face'">
-            <text>当面交易</text>
+            <text>Meet in person</text>
           </view>
           <view class="trade-option" :class="{ active: tradeMethod === 'delivery' }" @click="tradeMethod = 'delivery'">
-            <text>邮寄</text>
+            <text>Shipping</text>
           </view>
           <view class="trade-option" :class="{ active: tradeMethod === 'both' }" @click="tradeMethod = 'both'">
-            <text>都可以</text>
+            <text>Either</text>
           </view>
         </view>
       </view>
     </view>
 
     <view v-if="selectedTopic === 4" class="vote-section">
-      <view class="section-title">投票选项</view>
+      <view class="section-title">Poll options</view>
       <view v-for="(option, index) in voteOptions" :key="index" class="vote-option-item">
         <input
           class="vote-input"
           v-model="voteOptions[index]"
-          placeholder="请输入投票选项"
+          placeholder="Enter a poll option"
         />
         <text class="delete-option" @click="removeVoteOption(index)" v-if="voteOptions.length > 2">×</text>
       </view>
       <view class="add-option-btn" @click="addVoteOption" v-if="voteOptions.length < 6">
-        <text>+ 添加选项</text>
+        <text>+ Add option</text>
       </view>
     </view>
 
     <view class="more-settings">
       <view class="setting-item">
-        <text class="setting-label">匿名发布</text>
+        <text class="setting-label">Post anonymously</text>
         <view class="switch" :class="{ active: isAnonymous }" @click="toggleAnonymous">
           <view class="switch-dot"></view>
         </view>
@@ -198,7 +198,7 @@
 
     <view class="bottom-bar">
       <view class="publish-btn" :class="{ disabled: !canPublish }" @click="handlePublish">
-        发布
+        Publish
       </view>
     </view>
   </view>
@@ -216,7 +216,7 @@ const extractUploadedImageUrl = (res) => {
   if (data && typeof data.url === 'string') return data.url;
   if (data && Array.isArray(data.list) && data.list.length > 0 && data.list[0]?.url) return data.list[0].url;
   if (res && typeof res.url === 'string') return res.url;
-  throw new Error('上传响应格式错误: ' + JSON.stringify(res));
+  throw new Error('Invalid upload response: ' + JSON.stringify(res));
 };
 
 export default {
@@ -245,8 +245,8 @@ export default {
       const res = await getCategories();
       if (res.code === 200) this.topicList = Array.isArray(res.data?.list) ? res.data.list : [];
     } catch (error) {
-      console.error('获取话题列表失败:', error);
-      uni.showToast({ title: '获取话题失败', icon: 'none' });
+      console.error('获取话题列表Failed:', error);
+      uni.showToast({ title: 'Failed to load topics', icon: 'none' });
     }
   },
   computed: {
@@ -263,10 +263,10 @@ export default {
       return hasContent && !this.publishing;
     },
     reviewLabel() {
-      if (!this.aiReview?.riskLevel) return '低风险';
-      if (this.aiReview.riskLevel === 'high') return '高风险';
-      if (this.aiReview.riskLevel === 'medium') return '中风险';
-      return '低风险';
+      if (!this.aiReview?.riskLevel) return 'Low risk';
+      if (this.aiReview.riskLevel === 'high') return 'High risk';
+      if (this.aiReview.riskLevel === 'medium') return 'Medium risk';
+      return 'Low risk';
     },
     reviewCategoriesText() {
       if (!Array.isArray(this.aiReview?.categories) || this.aiReview.categories.length === 0) return '';
@@ -289,7 +289,7 @@ export default {
         sizeType: ['compressed'],
         sourceType: ['album', 'camera'],
         success: (res) => { this.imageList = [...this.imageList, ...res.tempFilePaths]; },
-        fail: () => { uni.showToast({ title: '选择图片失败', icon: 'none' }); }
+        fail: () => { uni.showToast({ title: 'Failed to select image', icon: 'none' }); }
       });
     },
     previewImage(index) { uni.previewImage({ current: index, urls: this.imageList }); },
@@ -299,7 +299,7 @@ export default {
     toggleAnonymous() { this.isAnonymous = !this.isAnonymous; },
     async handleAiAssist() {
       const draft = this.content.trim();
-      if (!draft) return uni.showToast({ title: '请先输入正文', icon: 'none' });
+      if (!draft) return uni.showToast({ title: 'Write the post first', icon: 'none' });
       this.aiLoading = true;
       try {
         const res = await assistPost({ content: draft, categoryId: this.selectedTopic });
@@ -308,17 +308,17 @@ export default {
           this.aiReview = res.data?.review || null;
           this.selectedTags = [];
           if (this.aiReview?.riskLevel === 'high') {
-            uni.showToast({ title: '已生成（检测到高风险提示）', icon: 'none' });
+            uni.showToast({ title: 'Generated with a high risk warning', icon: 'none' });
           } else if (this.aiReview?.riskLevel === 'medium') {
-            uni.showToast({ title: '已生成（含风险提示）', icon: 'none' });
+            uni.showToast({ title: 'Generated with a risk warning', icon: 'none' });
           } else {
-            uni.showToast({ title: 'AI 建议已生成', icon: 'none' });
+            uni.showToast({ title: 'AI suggestions are ready', icon: 'none' });
           }
         } else {
-          uni.showToast({ title: res.message || 'AI 生成失败', icon: 'none' });
+          uni.showToast({ title: res.message || 'AI generation failed', icon: 'none' });
         }
       } catch (error) {
-        uni.showToast({ title: error.message || 'AI 生成失败', icon: 'none' });
+        uni.showToast({ title: error.message || 'AI generation failed', icon: 'none' });
       } finally {
         this.aiLoading = false;
       }
@@ -327,8 +327,8 @@ export default {
     useAiContent() { if (this.aiSuggestion?.polishedContent) this.content = this.aiSuggestion.polishedContent; },
     applyReviewSuggestion() {
       if (!this.aiReview?.suggestion) return;
-      this.content = `${this.content}\n\n[AI审查建议]\n${this.aiReview.suggestion}`;
-      uni.showToast({ title: '已附加审查建议', icon: 'none' });
+      this.content = `${this.content}\n\n[AI review suggestion]\n${this.aiReview.suggestion}`;
+      uni.showToast({ title: 'Review suggestion added', icon: 'none' });
     },
     useAiCategory() {
       if (!this.aiSuggestion?.recommendedCategoryId) return;
@@ -340,7 +340,7 @@ export default {
       if (!tag) return;
       const index = this.selectedTags.indexOf(tag);
       if (index >= 0) return this.selectedTags.splice(index, 1);
-      if (this.selectedTags.length >= 5) return uni.showToast({ title: '最多选择 5 个标签', icon: 'none' });
+      if (this.selectedTags.length >= 5) return uni.showToast({ title: 'Choose up to 5 tags', icon: 'none' });
       this.selectedTags.push(tag);
     },
     async uploadImages(tempFiles) {
@@ -371,14 +371,14 @@ export default {
         }
         const res = await publishPost(postData);
         if (res.code === 200) {
-          uni.showToast({ title: '发布成功', icon: 'success' });
+          uni.showToast({ title: 'Post published', icon: 'success' });
           setTimeout(() => { uni.navigateBack(); }, 1500);
         } else {
-          uni.showToast({ title: res.message || '发布失败', icon: 'none' });
+          uni.showToast({ title: res.message || 'Publishing failed', icon: 'none' });
         }
       } catch (error) {
-        console.error('发布失败:', error);
-        uni.showToast({ title: '发布失败，请重试', icon: 'none' });
+        console.error('Publishing failed:', error);
+        uni.showToast({ title: 'Publishing failed. Try again', icon: 'none' });
       } finally {
         this.publishing = false;
       }

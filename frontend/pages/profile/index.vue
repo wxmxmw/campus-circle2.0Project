@@ -3,23 +3,23 @@
     <view class="profile-header">
       <view class="checkin-btn-wrapper" v-if="userStore.isLoggedIn">
         <button class="checkin-btn" :class="{ checked: isCheckedIn }" @click="handleCheckIn" :disabled="isCheckedIn">
-          {{ isCheckedIn ? '已签到' : '签到 +10' }}
+          {{ isCheckedIn ? 'Checked in' : 'Check in +10' }}
         </button>
       </view>
 
       <view class="user-card" @click="handleUserCardClick">
         <image v-if="userStore.isLoggedIn && userStore.avatar" :src="userStore.avatar" class="avatar-img" mode="aspectFill" />
-        <view v-else class="avatar-placeholder">我</view>
+        <view v-else class="avatar-placeholder">Me</view>
 
         <view class="info">
           <template v-if="userStore.isLoggedIn">
             <text class="username">{{ userStore.nickname }}</text>
-            <text class="school">{{ userStore.userInfo.school || '未认证学校' }}</text>
-            <text class="bio">{{ userStore.userInfo.bio || '这个人还没有留下简介。' }}</text>
+            <text class="school">{{ userStore.userInfo.school || 'School not verified' }}</text>
+            <text class="bio">{{ userStore.userInfo.bio || 'No bio yet.' }}</text>
           </template>
           <template v-else>
-            <text class="username">未登录用户</text>
-            <text class="desc">点击这里登录或注册</text>
+            <text class="username">Guest</text>
+            <text class="desc">Tap to sign in or sign up</text>
           </template>
         </view>
       </view>
@@ -27,35 +27,35 @@
       <view class="stats" v-if="userStore.isLoggedIn">
         <view class="stat-item">
           <text class="num">{{ userStore.userInfo.points || 0 }}</text>
-          <text class="label">我的积分</text>
+          <text class="label">My points</text>
         </view>
         <view class="stat-item" @click="handleFollowers">
           <text class="num">{{ userStore.userInfo.stats?.followers || 0 }}</text>
-          <text class="label">粉丝</text>
+          <text class="label">Followers</text>
         </view>
         <view class="stat-item" @click="goToFollowList">
           <text class="num">{{ userStore.userInfo.stats?.following || 0 }}</text>
-          <text class="label">关注</text>
+          <text class="label">Following</text>
         </view>
       </view>
     </view>
 
     <view class="menu-list">
-      <view class="menu-item" @click="handleMyPosts"><text>我的发布</text><text class="arrow">></text></view>
-      <view class="menu-item" @click="handleMyErrands"><text>我的跑腿</text><text class="arrow">></text></view>
-      <view class="menu-item" @click="handleMyCollections"><text>我的收藏</text><text class="arrow">></text></view>
-      <view class="menu-item" @click="handleSettings"><text>个人资料设置</text><text class="arrow">></text></view>
-      <view v-if="userStore.isAdmin" class="menu-item admin-entry" @click="handleAdmin"><text>社区治理工作台</text><text class="arrow">></text></view>
-      <view v-if="userStore.isLoggedIn" class="menu-item logout" @click="handleLogout"><text>退出登录</text></view>
+      <view class="menu-item" @click="handleMyPosts"><text>My posts</text><text class="arrow">></text></view>
+      <view class="menu-item" @click="handleMyErrands"><text>My errands</text><text class="arrow">></text></view>
+      <view class="menu-item" @click="handleMyCollections"><text>Saved posts</text><text class="arrow">></text></view>
+      <view class="menu-item" @click="handleSettings"><text>Profile settings</text><text class="arrow">></text></view>
+      <view v-if="userStore.isAdmin" class="menu-item admin-entry" @click="handleAdmin"><text>Community moderation</text><text class="arrow">></text></view>
+      <view v-if="userStore.isLoggedIn" class="menu-item logout" @click="handleLogout"><text>Sign out</text></view>
     </view>
 
     <view v-if="userStore.isLoggedIn && myPosts.length > 0" class="recent-posts">
-      <view class="section-title">最近发布</view>
+      <view class="section-title">Recent posts</view>
       <view v-for="post in myPosts" :key="post.id" class="mini-post" @click="handlePostClick(post.id)">
         <text class="post-content">{{ post.content }}</text>
         <view class="post-meta">
-          <text class="post-date">浏览 {{ post.stats?.views || 0 }}</text>
-          <text class="post-date" style="margin-left: 20rpx">点赞 {{ post.stats?.likes || 0 }}</text>
+          <text class="post-date">Views {{ post.stats?.views || 0 }}</text>
+          <text class="post-date" style="margin-left: 20rpx">Likes {{ post.stats?.likes || 0 }}</text>
         </view>
       </view>
     </view>
@@ -101,22 +101,22 @@ const refreshData = async () => {
     if (checkInRes.code === 200) isCheckedIn.value = checkInRes.data.checkedIn
     if (postRes.code === 200) myPosts.value = postRes.data.list
   } catch (e) {
-    console.error('刷新数据失败', e)
+    console.error('刷新数据Failed', e)
   }
 }
 
 const handleCheckIn = async () => {
   if (isCheckedIn.value) return
   try {
-    uni.showLoading({ title: '签到中...' })
+    uni.showLoading({ title: 'Checking in...' })
     const res = await userApi.checkIn()
     if (res.code === 200) {
-      uni.showToast({ title: '签到成功', icon: 'success' })
+      uni.showToast({ title: 'Checked in successfully', icon: 'success' })
       isCheckedIn.value = true
       userStore.updateUserInfo({ points: res.data.totalPoints })
     }
   } catch (error) {
-    uni.showToast({ title: error.message || '签到失败', icon: 'none' })
+    uni.showToast({ title: error.message || 'Check-in failed', icon: 'none' })
   } finally {
     uni.hideLoading()
   }
@@ -133,14 +133,14 @@ const goToFollowList = () => { if (userStore.isLoggedIn) uni.navigateTo({ url: '
 const handleAdmin = () => { uni.navigateTo({ url: '/pages/admin/governance/index' }) }
 const handleLogout = () => {
   uni.showModal({
-    title: '提示',
-    content: '确定要退出登录吗？',
+    title: 'Notice',
+    content: 'Are you sure you want to sign out?',
     success: (res) => {
       if (res.confirm) {
         userStore.logout()
         myPosts.value = []
         isCheckedIn.value = false
-        uni.showToast({ title: '已退出', icon: 'none' })
+        uni.showToast({ title: 'Signed out', icon: 'none' })
       }
     }
   })

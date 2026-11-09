@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
+import jakarta.annotation.PostConstruct;
 
 @Component
 public class JwtUtil {
@@ -16,6 +17,14 @@ public class JwtUtil {
     private String secret;
     @Value("${jwt.expiration-minutes}")
     private long expirationMinutes;
+
+    @PostConstruct
+    public void validateSecret() {
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32
+                || secret.startsWith("replace-with-")) {
+            throw new IllegalStateException("JWT_SECRET must be a unique random secret of at least 32 bytes");
+        }
+    }
 
     public String generate(String subject, Map<String, Object> claims) {
         Instant now = Instant.now();

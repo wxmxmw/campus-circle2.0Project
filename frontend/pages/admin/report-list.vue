@@ -2,66 +2,66 @@
   <view class="admin-container">
     <!-- 1. 自定义头部 (深色商务风) -->
     <view class="custom-header admin-theme">
-      <!-- 状态栏占位 -->
+      <!-- Status栏占位 -->
       <view class="status-bar"></view>
       <!-- 导航栏内容 -->
       <view class="nav-bar">
         <view class="back-btn" @click="goBack">
           <text class="back-arrow">←</text>
         </view>
-        <text class="page-title">内容审核工作台</text>
+        <text class="page-title">Content moderation</text>
         <view class="right-placeholder"></view>
       </view>
     </view>
 
     <!-- 2. 列表区域 -->
     <scroll-view scroll-y class="list-wrapper">
-      <view v-if="loading" class="loading-state">数据加载中...</view>
+      <view v-if="loading" class="loading-state">Loading data...</view>
       
       <view v-else-if="list.length === 0" class="empty">
-        <text>🎉 暂无待审核内容</text>
+        <text>🎉 No pending reports</text>
       </view>
 
       <view v-else v-for="item in list" :key="item.id" class="report-card">
         
-        <!-- 举报基本信息 -->
+        <!-- Reports基本信息 -->
         <view class="card-header">
           <view class="reason-tag">{{ item.reason }}</view>
           <text class="time">{{ formatDate(item.createTime) }}</text>
         </view>
         
-        <!-- 举报详细描述 -->
+        <!-- Reports详细描述 -->
         <view class="report-desc">
-          <text class="label">举报描述：</text>
-          <text class="value">{{ item.description || '无详细描述' }}</text>
+          <text class="label">Report details：</text>
+          <text class="value">{{ item.description || 'No details' }}</text>
         </view>
         
-        <!-- 被举报的内容快照 (灰色背景区域) -->
+        <!-- 被Reports的内容快照 (灰色背景区域) -->
         <view class="target-snapshot" v-if="item.targetSnapshot">
           <view class="snapshot-header">
             <text class="target-type" :class="item.targetType">
-              {{ item.targetType === 'POST' ? '帖子' : '评论' }}
+              {{ item.targetType === 'POST' ? 'Post' : 'Comment' }}
             </text>
-            <text class="author">发布者: {{ item.targetSnapshot.author?.nickname || '未知' }}</text>
+            <text class="author">Author: {{ item.targetSnapshot.author?.nickname || 'Unknown' }}</text>
           </view>
-          <text class="content-preview">{{ item.targetSnapshot.content || '（纯图片或无文本内容）' }}</text>
+          <text class="content-preview">{{ item.targetSnapshot.content || '(Image only or no text)' }}</text>
           <!-- 如果有图片，简单展示第一张 -->
           <view v-if="item.targetSnapshot.images && item.targetSnapshot.images.length" class="img-preview">
              <image :src="item.targetSnapshot.images[0]" mode="aspectFill" class="mini-img"></image>
           </view>
         </view>
         
-        <!-- 3. 操作按钮组 -->
+        <!-- 3. 操作By钮组 -->
         <view class="action-bar">
           <button class="btn reject" @click="handleProcess(item, 'REJECT_REPORT')">
-            驳回举报
+            Reject report
           </button>
           <view class="danger-zone">
             <button class="btn delete" @click="handleProcess(item, 'DELETE_POST')">
-              删内容
+              Delete content
             </button>
             <button class="btn ban" @click="handleProcess(item, 'BAN_USER')">
-              封号
+              Ban user
             </button>
           </view>
         </view>
@@ -96,42 +96,42 @@ const loadData = async () => {
     if (res.code === 200) {
       list.value = res.data.list
     } else {
-      uni.showToast({ title: res.message || '加载失败', icon: 'none' })
+      uni.showToast({ title: res.message || 'Loading failed', icon: 'none' })
     }
   } catch (e) {
-    console.error('加载举报列表失败:', e)
-    uni.showToast({ title: '网络请求错误', icon: 'none' })
+    console.error('加载Reports列表Failed:', e)
+    uni.showToast({ title: 'Network error', icon: 'none' })
   } finally {
     loading.value = false
   }
 }
 
-// 处理举报的核心逻辑
+// 处理Reports的核心逻辑
 const handleProcess = (item, action) => {
   let actionText = ''
-  if (action === 'REJECT_REPORT') actionText = '确定驳回举报？(认为内容无违规)'
-  if (action === 'DELETE_POST') actionText = '确定删除该内容？(不可恢复)'
-  if (action === 'BAN_USER') actionText = '确定封禁该用户？(慎重)'
+  if (action === 'REJECT_REPORT') actionText = 'Reject this report as unfounded?'
+  if (action === 'DELETE_POST') actionText = 'Delete this content permanently?'
+  if (action === 'BAN_USER') actionText = 'Ban this user?'
 
   // 弹窗输入处理备注
   uni.showModal({
-    title: '审核处理',
+    title: 'Review action',
     content: actionText,
     editable: true, // 允许输入备注
-    placeholderText: '请输入处理理由（选填）',
+    placeholderText: 'Reason (optional)',
     success: async (res) => {
       if (res.confirm) {
-        const note = res.content || '管理员后台操作'
+        const note = res.content || 'Administrator action'
         try {
-          uni.showLoading({ title: '提交中...' })
+          uni.showLoading({ title: 'Submitting...' })
           await adminApi.processReport(item.id, action, note)
           
-          uni.showToast({ title: '处理完成', icon: 'success' })
+          uni.showToast({ title: 'Action complete', icon: 'success' })
           
-          // 前端直接移除该条目，无需刷新整个列表
+          // 前端直接移除该条目，无需Refresh整个列表
           list.value = list.value.filter(i => i.id !== item.id)
         } catch (error) {
-          uni.showToast({ title: error.message || '操作失败', icon: 'none' })
+          uni.showToast({ title: error.message || 'Action failed', icon: 'none' })
         } finally {
           uni.hideLoading()
         }
@@ -186,7 +186,7 @@ const formatDate = (ts) => {
   height: calc(100vh - var(--status-bar-height) - 88rpx);
 }
 
-/* 举报卡片 */
+/* Reports卡片 */
 .report-card { 
   background: #fff; 
   border-radius: 16rpx; 
@@ -233,7 +233,7 @@ const formatDate = (ts) => {
 .img-preview { margin-top: 10rpx; }
 .mini-img { width: 120rpx; height: 120rpx; border-radius: 8rpx; background: #eee; }
 
-/* 按钮组 */
+/* By钮组 */
 .action-bar { 
   display: flex; 
   justify-content: space-between; 

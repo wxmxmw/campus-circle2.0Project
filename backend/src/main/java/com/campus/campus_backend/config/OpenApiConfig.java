@@ -29,7 +29,7 @@ public class OpenApiConfig {
                                 .bearerFormat("JWT")))
                 .info(new Info()
                         .title("Campus Backend API")
-                        .description("校园社交平台后端API文档")
+                        .description("Campus community backend API")
                         .version("v1.0.0"));
     }
 }

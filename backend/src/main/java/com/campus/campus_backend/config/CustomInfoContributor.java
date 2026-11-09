@@ -18,7 +18,7 @@ public class CustomInfoContributor implements InfoContributor {
         // 应用基本信息
         details.put("name", "Campus Circle");
         details.put("version", "1.0.0");
-        details.put("description", "校园社交平台后端API服务");
+        details.put("description", "Campus community API service");
 
         // 运行时信息
         details.put("startup-time", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
@@ -27,11 +27,11 @@ public class CustomInfoContributor implements InfoContributor {
 
         // 功能模块信息
         Map<String, Object> modules = new HashMap<>();
-        modules.put("authentication", "JWT认证系统");
-        modules.put("social", "社交内容管理");
-        modules.put("messaging", "消息通知系统");
-        modules.put("errands", "校园跑腿业务");
-        modules.put("monitoring", "系统监控");
+        modules.put("authentication", "JWT authentication");
+        modules.put("social", "Community content");
+        modules.put("messaging", "Messaging and notifications");
+        modules.put("errands", "Campus errands");
+        modules.put("monitoring", "System monitoring");
         details.put("modules", modules);
 
         // 部署环境信息

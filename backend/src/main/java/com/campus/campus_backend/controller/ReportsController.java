@@ -61,6 +61,6 @@ public class ReportsController {
             post.setStatus((short) 1);
             postRepository.save(post);
         }
-        return Result.okMessage("举报成功");
+        return Result.okMessage("Report submitted");
     }
 }

@@ -5,70 +5,70 @@
       <view class="nav">
         <view class="nav-btn" @click="goBack">&lt;</view>
         <view class="nav-title">
-          <text class="title">权威官方数据</text>
+          <text class="title">Official sources</text>
           <text class="subtitle">{{ pageSubtitle }}</text>
         </view>
-        <view class="nav-btn small" @click="refreshList">刷新</view>
+        <view class="nav-btn small" @click="refreshList">Refresh</view>
       </view>
     </view>
 
     <scroll-view scroll-y class="content" @scrolltolower="loadList">
       <view class="hero-card">
-        <text class="hero-title">查看 aggregated_notice 中的权威官方数据</text>
+        <text class="hero-title">View verified notices in aggregated_notice</text>
         <text class="hero-text">
-          这里直接读取系统聚合后的官方公告、通知与权威信息，不依赖社区治理事件表，因此清空监测事件后这里仍可正常查看。
+          This page reads aggregated official notices independently of moderation events.
         </text>
 
         <view class="toolbar">
           <input
             v-model.trim="keyword"
             class="search-input"
-            placeholder="搜索标题、摘要或正文"
+            placeholder="Search title, summary, or text"
             confirm-type="search"
             @confirm="applyKeyword"
           />
-          <button class="search-btn" @click="applyKeyword">搜索</button>
+          <button class="search-btn" @click="applyKeyword">Search</button>
         </view>
 
         <view class="filter-row">
           <view class="filter-pill" @click="selectCategory">
-            <text>分类</text>
-            <text class="filter-value">{{ activeCategory || '全部分类' }}</text>
+            <text>Category</text>
+            <text class="filter-value">{{ activeCategory || 'All categories' }}</text>
           </view>
         </view>
 
         <view class="hero-meta">
-          <text>当前数据源：aggregated_notice</text>
+          <text>Source: aggregated_notice</text>
         </view>
       </view>
 
-      <view v-if="loading && records.length === 0" class="state-card">官方数据加载中...</view>
-      <view v-else-if="records.length === 0" class="state-card">当前没有匹配条件的官方数据</view>
+      <view v-if="loading && records.length === 0" class="state-card">Loading official data...</view>
+      <view v-else-if="records.length === 0" class="state-card">No matching official data</view>
 
       <view v-else class="card-list">
         <view v-for="item in records" :key="item.id" class="data-card">
           <view class="card-top">
             <view class="badge-group">
-              <text class="type-badge">{{ item.category || '未分类' }}</text>
-              <text class="confidence-badge">{{ item.sourceName || '官方来源' }}</text>
+              <text class="type-badge">{{ item.category || 'Uncategorized' }}</text>
+              <text class="confidence-badge">{{ item.sourceName || 'Official source' }}</text>
             </view>
             <text class="time">{{ formatDate(item.publishTime) }}</text>
           </view>
 
-          <text class="card-title">{{ item.title || '未命名官方数据' }}</text>
-          <text class="card-text">{{ item.summary || '暂无摘要内容' }}</text>
+          <text class="card-title">{{ item.title || 'Untitled official notice' }}</text>
+          <text class="card-text">{{ item.summary || 'No summary' }}</text>
 
           <view class="meta-list">
-            <text class="meta-item">状态：{{ item.status || 'ONLINE' }}</text>
-            <text class="meta-item">对象：{{ item.targetAudience || '公开通知' }}</text>
-            <text class="meta-item">地点：{{ item.location || '未注明' }}</text>
+            <text class="meta-item">Status：{{ item.status || 'ONLINE' }}</text>
+            <text class="meta-item">Audience：{{ item.targetAudience || 'Public notice' }}</text>
+            <text class="meta-item">Location：{{ item.location || 'Unspecified' }}</text>
           </view>
 
         </view>
       </view>
 
-      <view v-if="loadingMore" class="load-more loading-more">加载更多官方数据...</view>
-      <view v-else-if="hasMore" class="load-more" @click="loadList">加载更多</view>
+      <view v-if="loadingMore" class="load-more loading-more">Loading more official data...</view>
+      <view v-else-if="hasMore" class="load-more" @click="loadList">Load more</view>
       <view style="height: 40rpx;"></view>
     </scroll-view>
   </view>
@@ -90,7 +90,7 @@ const hasMore = ref(false)
 const categoryOptions = ref([])
 
 const pageSubtitle = computed(() => {
-  return activeCategory.value ? `${activeCategory.value} 分类` : '社区治理全量官方数据'
+  return activeCategory.value ? `${activeCategory.value} Category` : 'All official data'
 })
 
 onLoad(async (options) => {
@@ -139,7 +139,7 @@ const applyKeyword = async () => {
 }
 
 const selectCategory = () => {
-  const options = ['全部分类', ...categoryOptions.value]
+  const options = ['All categories', ...categoryOptions.value]
   uni.showActionSheet({
     itemList: options,
     success: async ({ tapIndex }) => {
@@ -183,7 +183,7 @@ const loadList = async (force = false) => {
       page.value += 1
     }
   } catch (error) {
-    uni.showToast({ title: error.message || '加载失败', icon: 'none' })
+    uni.showToast({ title: error.message || 'Loading failed', icon: 'none' })
   } finally {
     loading.value = false
     loadingMore.value = false
@@ -191,7 +191,7 @@ const loadList = async (force = false) => {
 }
 
 const formatDate = (value) => {
-  if (!value || value === 'null') return '暂无时间'
+  if (!value || value === 'null') return 'No date'
   try {
     const date = new Date(value)
     return `${date.getMonth() + 1}-${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`

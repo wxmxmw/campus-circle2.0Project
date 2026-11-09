@@ -21,7 +21,7 @@
         </view>
 
         <view class="post-meta">
-          <text class="post-views">浏览 {{ post.viewsText || post.views || 0 }}</text>
+          <text class="post-views">Views {{ post.viewsText || post.views || 0 }}</text>
         </view>
       </view>
     </view>

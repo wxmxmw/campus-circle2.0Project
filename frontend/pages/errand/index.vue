@@ -2,11 +2,11 @@
  <view class="page-container">
      <!-- 自定义头部 (绿色) -->
      <view class="custom-header neutral-theme">
-       <!-- 状态栏占位 (手机时间信号栏) -->
+       <!-- Status栏占位 (手机时间Signals栏) -->
        <view class="status-bar"></view>
        <!-- 标题栏 -->
        <view class="nav-bar">
-         <text class="page-title">跑腿圈子</text>
+         <text class="page-title">Errands</text>
        </view>
      </view>
     
@@ -34,23 +34,23 @@
         <view class="card-body">
           <text class="desc">{{ item.content }}</text>
           <view class="route">
-            <text class="tag pick">取</text> {{ item.pickupAddr }}
+            <text class="tag pick">Pickup</text> {{ item.pickupAddr }}
           </view>
           <view class="route">
-            <text class="tag send">送</text> {{ item.deliveryAddr }}
+            <text class="tag send">Delivery</text> {{ item.deliveryAddr }}
           </view>
         </view>
         
         <view class="card-footer">
-          <text class="time">刚刚发布</text>
+          <text class="time">Posted just now</text>
           <view class="status-tag" :class="'s-'+item.status">
             {{ formatStatus(item.status) }}
           </view>
         </view>
       </view>
       
-      <!-- 空状态 -->
-      <view v-if="list.length === 0" class="empty">暂无跑腿订单</view>
+      <!-- 空Status -->
+      <view v-if="list.length === 0" class="empty">No errands yet</view>
     </scroll-view>
 
     <TabBar current-tab="circle" />
@@ -100,7 +100,7 @@ const goToDetail = (id) => {
 }
 
 const formatStatus = (status) => {
-  const map = { 0: '待接单', 1: '进行中', 2: '已完成', 3: '已取消' }
+  const map = { 0: 'Open', 1: 'In progress', 2: 'Completed', 3: 'Cancelled' }
   return map[status]
 }
 
@@ -135,7 +135,7 @@ const loadMore = () => {
 }
 
 .status-bar {
-  /* 自动获取系统状态栏高度 */
+  /* 自动获取系统Status栏高度 */
   height: var(--status-bar-height); 
   width: 100%;
 }
@@ -160,7 +160,7 @@ const loadMore = () => {
   padding: 20rpx;
   box-sizing: border-box;
   padding-bottom: 160rpx;
-  margin-top: calc(var(--status-bar-height) + 108rpx); /* 状态栏+导航栏高度+余量 */
+  margin-top: calc(var(--status-bar-height) + 108rpx); /* Status栏+导航栏高度+余量 */
 }
 .title { font-size: 40rpx; font-weight: 800; }
 .plus-btn { background: #efefef; color: #4f4f4f; padding: 10rpx 24rpx; border-radius: 30rpx; font-size: 26rpx; font-weight: bold; }
@@ -190,8 +190,8 @@ const loadMore = () => {
 .card-footer { display: flex; justify-content: space-between; margin-top: 20rpx; padding-top: 20rpx; border-top: 1rpx solid #f9f9f9; }
 .time { font-size: 24rpx; color: #ccc; }
 .status-tag { font-size: 24rpx; font-weight: bold; }
-.s-0 { color: #faad14; } /* 待接单 */
-.s-1 { color: #5a5a5a; } /* 进行中 */
+.s-0 { color: #faad14; } /* Open */
+.s-1 { color: #5a5a5a; } /* In progress */
 .s-2 { color: #3f3f3f; }
 /* 新增货币样式 */
 .bounty-wrapper { display: flex; align-items: center; }

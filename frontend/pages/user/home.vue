@@ -5,9 +5,9 @@
     
     <!-- 个人资料卡片 -->
     <view class="profile-card">
-      <!-- 顶部行：包含头像(绝对定位) 和 按钮组(右对齐) -->
+      <!-- 顶部行：包含Avatar(绝对定位) 和 By钮组(右对齐) -->
       <view class="top-row">
-        <!-- 头像 -->
+        <!-- Avatar -->
         <view class="avatar-wrapper">
           <image 
             v-if="userInfo?.avatarUrl" 
@@ -18,15 +18,15 @@
           <view v-else class="avatar-placeholder">👤</view>
         </view>
         
-        <!-- 按钮组 -->
+        <!-- By钮组 -->
         <view class="btn-group">
-          <button class="action-btn chat-style" @click="handleChat">私聊</button>
+          <button class="action-btn chat-style" @click="handleChat">Message</button>
           <button 
             class="action-btn follow-style" 
             :class="{ 'is-followed': userInfo?.isFollowing }"
             @click="handleFollow"
           >
-            {{ userInfo?.isFollowing ? '已关注' : '+ 关注' }}
+            {{ userInfo?.isFollowing ? 'Following' : '+ Following' }}
           </button>
         </view>
       </view>
@@ -39,44 +39,44 @@
         <view class="school-row" v-if="userInfo.school">
           <text class="school-tag">{{ userInfo.school }}</text>
         </view>
-        <view class="bio">{{ userInfo.bio || '这个人很懒，什么都没留下...' }}</view>
+        <view class="bio">{{ userInfo.bio || 'No bio yet...' }}</view>
       </view>
       
       <!-- 统计数据 -->
       <view class="stats-row" v-if="userInfo">
         <view class="stat">
           <text class="num">{{ userInfo.stats?.likes || 0 }}</text>
-          <text class="label">获赞</text>
+          <text class="label">Likes received</text>
         </view>
         <view class="stat">
           <text class="num">{{ userInfo.stats?.following || 0 }}</text>
-          <text class="label">关注</text>
+          <text class="label">Following</text>
         </view>
         <view class="stat">
           <text class="num">{{ userInfo.stats?.followers || 0 }}</text>
-          <text class="label">粉丝</text>
+          <text class="label">Followers</text>
         </view>
       </view>
     </view>
     
-    <!-- Ta 的动态 -->
+    <!-- Their posts -->
     <view class="posts-section">
       <view class="section-header">
-        <text class="section-title">Ta 的动态</text>
+        <text class="section-title">Their posts</text>
         <text class="post-count" v-if="userPosts.length">({{ userPosts.length }})</text>
       </view>
       
-      <!-- 加载中 -->
+      <!-- Loading -->
       <view v-if="loadingPosts" class="loading-box">
-        <text>加载动态中...</text>
+        <text>Loading posts...</text>
       </view>
       
-      <!-- 空状态 -->
+      <!-- 空Status -->
       <view v-else-if="!userPosts || userPosts.length === 0" class="empty-tip">
-        <text>暂无公开动态</text>
+        <text>No public posts</text>
       </view>
       
-      <!-- 帖子列表 -->
+      <!-- Post列表 -->
       <view v-else class="post-list">
         <view 
           v-for="post in userPosts" 
@@ -144,8 +144,8 @@ const loadUserProfile = async () => {
       }
     }
   } catch (e) {
-    console.error('用户资料加载失败', e)
-    uni.showToast({ title: '加载失败', icon: 'none' })
+    console.error('用户资料Loading failed', e)
+    uni.showToast({ title: 'Loading failed', icon: 'none' })
   }
 }
 
@@ -154,10 +154,10 @@ const loadUserPosts = async () => {
   loadingPosts.value = true
   try {
     const res = await userApi.getUserPosts(userId.value)
-    console.log('用户动态API返回:', res) // 调试日志
+    console.log('用户动态APIBack:', res) // 调试志
     
     if (res.code === 200) {
-      // 兼容后端可能直接返回数组，或者返回 { list: [] } 的情况
+      // 兼容后端可能直接Back数组，或者Back { list: [] } 的情况
       const normalizePost = (post) => ({
         ...post,
         images: Array.isArray(post?.images) ? post.images.map(getImageUrl) : []
@@ -171,7 +171,7 @@ const loadUserPosts = async () => {
       }
     }
   } catch (e) {
-    console.error('加载动态失败', e)
+    console.error('加载动态Failed', e)
   } finally {
     loadingPosts.value = false
   }
@@ -180,7 +180,7 @@ const loadUserPosts = async () => {
 const handleChat = () => {
   if (!userStore.isLoggedIn) return uni.navigateTo({ url: '/pages/login/index' })
   if (String(userStore.userInfo?.id) === String(userId.value)) {
-    return uni.showToast({ title: '不能和自己私聊', icon: 'none' })
+    return uni.showToast({ title: 'You cannot message yourself', icon: 'none' })
   }
   uni.navigateTo({ url: `/pages/chat/detail?userId=${userId.value}` })
 }
@@ -192,9 +192,9 @@ const handleFollow = async () => {
   try {
     await userApi.toggleFollow(userId.value, newState)
     userInfo.value.isFollowing = newState
-    uni.showToast({ title: newState ? '已关注' : '已取消', icon: 'none' })
+    uni.showToast({ title: newState ? 'Following' : 'Cancelled', icon: 'none' })
   } catch (e) {
-    uni.showToast({ title: '操作失败', icon: 'none' })
+    uni.showToast({ title: 'Action failed', icon: 'none' })
   }
 }
 
@@ -230,14 +230,14 @@ const formatDate = (ts) => {
 /* --- 1. 顶部布局修正 --- */
 .top-row {
   display: flex;
-  justify-content: flex-end; /* 按钮靠右 */
+  justify-content: flex-end; /* By钮靠右 */
   align-items: center; /* 垂直居中 */
-  height: 80rpx; /* 给一个固定高度，给头像留出位置 */
+  height: 80rpx; /* 给一个固定高度，给Avatar留出位置 */
   position: relative;
   margin-bottom: 20rpx;
 }
 
-/* --- 2. 头像绝对定位 --- */
+/* --- 2. Avatar绝对定位 --- */
 .avatar-wrapper {
   position: absolute;
   left: 0;
@@ -259,7 +259,7 @@ const formatDate = (ts) => {
   font-size: 60rpx; 
 }
 
-/* --- 3. 按钮组美化 --- */
+/* --- 3. By钮组美化 --- */
 .btn-group {
   display: flex;
   gap: 20rpx;

@@ -84,6 +84,6 @@ public class CommentsController {
             post.setCommentCount(Math.max(0, current - 1));
             postRepository.save(post);
         }
-        return Result.okMessage("删除成功");
+        return Result.okMessage("Deleted");
     }
 }
