@@ -1,0 +1,7 @@
+#!/bin/sh
+# Block Google API keys from entering new commits. Run from the repository root.
+if git grep --cached -I -q -E 'AIza[0-9A-Za-z_-]{35}' -- .; then
+  echo 'Commit blocked: a Google API key is present in staged files.' >&2
+  echo 'Remove the key and load it from a private environment variable instead.' >&2
+  exit 1
+fi
